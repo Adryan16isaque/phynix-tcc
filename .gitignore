@@ -1,0 +1,10 @@
+# Segredos — nunca versionar
+backend/.env
+.env
+_env
+*.pem
+*.key
+
+# Sistema
+.DS_Store
+Thumbs.db
