@@ -11,9 +11,12 @@ export const state = {
   studiedDays:    [],   // ['YYYY-MM-DD', ...]
   firesByDay:     {},   // { 'YYYY-MM-DD': count }
   achievements:   [],   // lista completa vinda do servidor, com .unlocked
-  dailyGoalHours: 4,
   streak:         0,
+  yearHours:      0,
   chatSessionId:  null,
+  historySessions:  [],
+  historyOffset:    0,
+  historyHasMore:   false,
   calendarMonth:  new Date().getMonth(),
   calendarYear:   new Date().getFullYear(),
 };

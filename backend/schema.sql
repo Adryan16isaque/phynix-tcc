@@ -117,12 +117,3 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ─────────────────────────────────────────────
--- Configurações do usuário — meta diária (ea_goal)
--- ─────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS settings (
-  user_id           INT PRIMARY KEY,
-  daily_goal_hours  INT NOT NULL DEFAULT 4,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -92,3 +92,30 @@ tr:hover td { background: rgba(79,138,255,0.03); }
   cursor: text; outline: none; font-family: 'DM Sans', sans-serif;
 }
 
+/* Botão "🔥 Concluir hoje" na tabela do planner */
+.btn-fire {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  transition: all 0.18s;
+}
+
+.btn-fire:hover { border-color: var(--gold); color: var(--gold); }
+
+.btn-fire.done {
+  background: rgba(245,158,11,0.15);
+  border-color: var(--gold);
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.fire-count {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

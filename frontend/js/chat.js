@@ -10,10 +10,11 @@ import { api } from './api.js';
 import { state } from './state.js';
 import { escapeHtml, showToast } from './ui.js';
 import { handleUnlocked } from './achievements.js';
+import { switchTab } from './tabs.js';
 
 const WELCOME_HTML = `
   <div class="msg ai">
-    <div class="msg-avatar">🤖</div>
+    <div class="msg-avatar"><img src="assets/fenix.png" alt="" class="avatar-fenix"></div>
     <div class="msg-bubble">
       Olá! 👋 Sou o seu assistente de estudos para <strong>concursos e vestibulares</strong>. Posso te ajudar com:<br><br>
       • Explicações de matérias (Matemática, Português, História...)<br>
@@ -68,7 +69,7 @@ function appendMsg(role, text, msgId = null) {
     : '';
 
   div.innerHTML = `
-    <div class="msg-avatar">${normRole === 'ai' ? '🤖' : '👤'}</div>
+    <div class="msg-avatar">${normRole === 'ai' ? '<img src="assets/fenix.png" alt="" class="avatar-fenix">' : '👤'}</div>
     <div class="msg-bubble">
       ${editBtn}
       <div class="msg-bubble-content">${escapeHtml(text).replace(/\n/g, '<br>')}</div>
@@ -86,7 +87,7 @@ function appendTyping() {
   const div  = document.createElement('div');
   div.className = 'msg ai';
   div.innerHTML = `
-    <div class="msg-avatar">🤖</div>
+    <div class="msg-avatar"><img src="assets/fenix.png" alt="" class="avatar-fenix"></div>
     <div class="msg-bubble">
       <div class="typing"><span></span><span></span><span></span></div>
     </div>
@@ -193,54 +194,69 @@ export async function saveEditedMessage(btnEl) {
 
 
 /* ── Histórico de conversas ───────────────────────────────── */
-export function toggleHistory() {
-  document.getElementById('history-panel').classList.contains('open') ? closeHistory() : openHistory();
-}
+const HISTORY_PAGE_SIZE = 10;
 
-async function openHistory() {
-  document.getElementById('history-panel').classList.add('open');
-  document.getElementById('history-overlay').classList.add('open');
-  await loadHistoryList();
-}
+export async function loadHistoryList() {
+  state.historySessions = [];
+  state.historyOffset   = 0;
+  state.historyHasMore  = false;
 
-export function closeHistory() {
-  document.getElementById('history-panel').classList.remove('open');
-  document.getElementById('history-overlay').classList.remove('open');
-}
-
-async function loadHistoryList() {
   const list = document.getElementById('history-list');
   list.innerHTML = '<div class="history-empty">Carregando…</div>';
   try {
-    const { sessions } = await api('/chat.php?list=1');
-    renderHistoryList(sessions);
+    const data = await api('/chat.php?list=1&offset=0');
+    state.historySessions = data.sessions;
+    state.historyOffset   = data.sessions.length;
+    state.historyHasMore  = data.hasMore;
+    renderHistoryList();
   } catch (err) {
     list.innerHTML = '<div class="history-empty">Erro ao carregar histórico.</div>';
   }
 }
 
-function renderHistoryList(sessions) {
-  const list = document.getElementById('history-list');
+export async function loadMoreHistory() {
+  const btn = document.getElementById('history-load-more');
+  if (btn) { btn.disabled = true; btn.textContent = 'Carregando…'; }
+
+  try {
+    const data = await api(`/chat.php?list=1&offset=${state.historyOffset}`);
+    state.historySessions = state.historySessions.concat(data.sessions);
+    state.historyOffset  += data.sessions.length;
+    state.historyHasMore  = data.hasMore;
+    renderHistoryList();
+  } catch (err) {
+    showToast('⚠️', 'Erro', err.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Carregar mais'; }
+  }
+}
+
+function renderHistoryList() {
+  const list     = document.getElementById('history-list');
+  const sessions = state.historySessions;
 
   if (!sessions.length) {
     list.innerHTML = '<div class="history-empty">Nenhuma conversa ainda.<br>Envie uma mensagem pra começar!</div>';
     return;
   }
 
-  list.innerHTML = sessions.map(s => {
+  const cards = sessions.map(s => {
     const active = String(s.id) === String(state.chatSessionId);
     const dt = new Date((s.updated_at || s.created_at).replace(' ', 'T'));
     const date = isNaN(dt) ? '' : dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
     return `
-      <div class="history-item ${active ? 'active' : ''}" onclick="openSession(${s.id})">
-        <div class="history-item-text">
-          <div class="history-item-preview">${escapeHtml(s.preview || 'Conversa')}</div>
-          <div class="history-item-date">${date}</div>
-        </div>
+      <div class="ach-card ${active ? 'active' : ''}" onclick="openSession(${s.id})">
         <button class="history-item-delete" onclick="deleteSession(event, ${s.id})" aria-label="Excluir conversa">🗑️</button>
+        <div class="history-item-date">${date}</div>
+        <div class="history-item-preview">${escapeHtml(s.preview || 'Conversa')}</div>
       </div>`;
   }).join('');
+
+  const loadMoreBtn = state.historyHasMore
+    ? '<button id="history-load-more" class="btn history-load-more" onclick="loadMoreHistory()">Carregar mais</button>'
+    : '';
+
+  list.innerHTML = cards + loadMoreBtn;
 }
 
 export async function openSession(id) {
@@ -255,7 +271,7 @@ export async function openSession(id) {
     } else {
       messages.forEach(m => appendMsg(m.role, m.content, m.id));
     }
-    closeHistory();
+    switchTab('chat');
   } catch (err) {
     showToast('⚠️', 'Erro', err.message);
   }
@@ -277,5 +293,4 @@ export async function deleteSession(evt, id) {
 export function startNewChat() {
   state.chatSessionId = null;
   document.getElementById('messages').innerHTML = WELCOME_HTML;
-  closeHistory();
 }

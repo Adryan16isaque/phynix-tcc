@@ -28,6 +28,12 @@
 
   <!-- Estilos da tela de conquistas -->
   <link rel="stylesheet" href="css/components/achievements.css">
+
+  <!-- Estilos do histórico de conversas (aba própria) -->
+  <link rel="stylesheet" href="css/components/history.css">
+
+  <!-- Identidade visual da fênix (avatares, logo, chama animada) -->
+  <link rel="stylesheet" href="css/components/fenix.css">
 </head>
 <body>
 
@@ -84,7 +90,9 @@
   ══════════════════════════════════════ -->
   <aside id="sidebar">
     <div class="logo">
-      <div class="logo-icon">🎯</div>
+      <div class="logo-icon">
+        <img src="assets/fenix.png" alt="Phynix" class="logo-fenix">
+      </div>
       <div class="logo-text">Estuda<span>AI</span></div>
     </div>
 
@@ -102,16 +110,49 @@
     <button class="nav-btn" onclick="switchTab('achievements')" aria-label="Conquistas">
       <span class="icon">🏆</span> Conquistas
     </button>
+    <button class="nav-btn" onclick="switchTab('history')" aria-label="Histórico">
+      <span class="icon">🕓</span> Histórico
+    </button>
 
     <div class="streak-widget" onclick="switchTab('achievements')" title="Sequência de estudos">
-      <span class="streak-fire" id="streak-fire-icon">🔥</span>
+      <span class="streak-fire" id="streak-fire-icon">
+        <svg width="48" height="60" viewBox="0 0 80 105" xmlns="http://www.w3.org/2000/svg" style="display:block">
+          <defs>
+            <radialGradient id="glow" cx="50%" cy="85%" r="50%">
+              <stop offset="0%" stop-color="#ff7700" stop-opacity=".55"/>
+              <stop offset="100%" stop-color="#ff4400" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="outerFlame" x1="40" y1="5" x2="40" y2="95" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#ff4422"/>
+              <stop offset="60%" stop-color="#ff6600"/>
+              <stop offset="100%" stop-color="#cc2200"/>
+            </linearGradient>
+            <linearGradient id="innerFlame" x1="40" y1="30" x2="40" y2="90" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#ffe566"/>
+              <stop offset="45%" stop-color="#ffaa00"/>
+              <stop offset="100%" stop-color="#ff6600"/>
+            </linearGradient>
+          </defs>
+          <ellipse class="flame-glw" cx="40" cy="93" rx="28" ry="8" fill="url(#glow)"/>
+          <g class="flame-f2">
+            <path d="M40 8 C40 8,58 28,62 50 C65 65,60 78,55 85 C62 75,63 60,58 48 C60 62,56 74,50 82 C55 68,54 52,48 38 C50 55,48 68,42 78 C44 60,42 42,38 28 C36 44,35 60,30 74 C26 64,22 52,26 38 C20 52,20 66,26 80 C20 72,16 60,18 48 C14 62,16 76,24 86 C18 78,16 65,20 52 C15 65,17 80,28 89 C22 82,20 72,22 62 C18 72,20 85,32 93 C36 95,40 96,44 95 C56 92,62 82,60 70 C64 80,64 90,58 95 C66 88,68 76,64 62 C68 72,66 84,60 90 C66 82,66 68,62 56 C64 68,62 80,56 88 C60 76,62 62,58 48 C62 60,62 74,56 84 C60 70,60 54,54 40 C52 55,52 70,46 82 C46 65,46 48,40 30 Z"
+              fill="url(#outerFlame)" opacity="0.9"/>
+          </g>
+          <g class="flame-f1">
+            <path d="M40 6 C46 20,60 36,62 56 C64 72,56 86,46 92 C50 80,50 64,44 50 C46 64,44 78,38 88 C32 78,30 64,32 50 C26 64,26 80,30 92 C20 86,16 72,18 56 C20 36,34 20,40 6 Z"
+              fill="url(#outerFlame)"/>
+            <path d="M40 34 C43 44,50 56,50 66 C50 76,46 84,40 87 C34 84,30 76,30 66 C30 56,37 44,40 34 Z"
+              fill="url(#innerFlame)"/>
+          </g>
+          <circle class="flame-e1" cx="34" cy="80" r="2.5" fill="#ffdd44"/>
+          <circle class="flame-e2" cx="47" cy="75" r="2" fill="#ffaa22"/>
+          <circle class="flame-e3" cx="40" cy="82" r="1.8" fill="#ffee66"/>
+          <circle class="flame-e4" cx="44" cy="85" r="2.2" fill="#ff8800"/>
+        </svg>
+      </span>
       <div class="streak-count" id="sidebar-streak">0</div>
       <div class="streak-label">dias seguidos</div>
     </div>
-
-    <button class="nav-btn" onclick="openModal()" aria-label="Definir meta diária" style="margin-top:10px">
-      <span class="icon">🎯</span> Meta diária
-    </button>
 
     <div class="sidebar-user">
       <div class="sidebar-user-name" id="sidebar-user-name">—</div>
@@ -131,35 +172,26 @@
       <button class="tab"        onclick="switchTab('planner')"      role="tab">📋 Planner</button>
       <button class="tab"        onclick="switchTab('calendar')"     role="tab">📅 Calendário</button>
       <button class="tab"        onclick="switchTab('achievements')" role="tab">🏆 Conquistas</button>
+      <button class="tab"        onclick="switchTab('history')"      role="tab">🕓 Histórico</button>
     </div>
 
     <!-- ── PAINEL: CHAT ── -->
     <div class="panel active" id="chat-panel">
 
       <div id="chat-header">
-        <div class="ai-avatar">🤖</div>
+        <div class="ai-avatar">
+          <img src="assets/fenix.png" alt="Phynix AI" class="avatar-fenix">
+        </div>
         <div class="ai-info">
           <h3>Assistente EstudaAI</h3>
           <div class="ai-status">Online — Pronto para estudar</div>
         </div>
-        <div class="chat-header-actions">
-          <button class="chat-header-btn" onclick="startNewChat()" aria-label="Nova conversa" title="Nova conversa">➕</button>
-          <button class="chat-header-btn" onclick="toggleHistory()" aria-label="Histórico de conversas" title="Histórico">🕘</button>
-        </div>
+        <button class="btn" onclick="startNewChat()" style="font-size:12px;padding:6px 12px">+ Nova Conversa</button>
       </div>
-
-      <div id="history-overlay" onclick="closeHistory()"></div>
-      <aside id="history-panel" aria-label="Histórico de conversas" role="dialog">
-        <div class="history-header">
-          <span>🕘 Conversas</span>
-          <button class="history-close" onclick="closeHistory()" aria-label="Fechar histórico">✕</button>
-        </div>
-        <div id="history-list"></div>
-      </aside>
 
       <div id="messages" role="log" aria-live="polite" aria-label="Conversa com o assistente">
         <div class="msg ai">
-          <div class="msg-avatar">🤖</div>
+          <div class="msg-avatar"><img src="assets/fenix.png" alt="" class="avatar-fenix"></div>
           <div class="msg-bubble">
             Olá! 👋 Sou o seu assistente de estudos para <strong>concursos e vestibulares</strong>. Posso te ajudar com:<br><br>
             • Explicações de matérias (Matemática, Português, História...)<br>
@@ -247,6 +279,11 @@
             <div class="stat-val" id="stat-hours">0h</div>
             <div class="stat-lbl">Horas este mês</div>
           </div>
+          <div class="stat-card" style="--grad:linear-gradient(90deg,#a78bfa,#ec4899)">
+            <div class="stat-ico">🗓️</div>
+            <div class="stat-val" id="stat-year-hours">0h</div>
+            <div class="stat-lbl">Horas este ano</div>
+          </div>
         </div>
 
         <div class="cal-header">
@@ -288,6 +325,15 @@
       </div>
     </div><!-- /achievements-panel -->
 
+    <!-- ── PAINEL: HISTÓRICO DE CONVERSAS ── -->
+    <div class="panel" id="history-panel">
+      <div>
+        <div class="section-title">🕓 Histórico de Conversas</div>
+        <div class="section-sub">Veja e retome suas conversas anteriores com o assistente.</div>
+        <div class="ach-grid" id="history-list"></div>
+      </div>
+    </div><!-- /history-panel -->
+
   </main>
 </div><!-- /app -->
 
@@ -302,21 +348,6 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     MODAL: META DIÁRIA
-══════════════════════════════════════ -->
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <h3>🎯 Definir meta diária</h3>
-    <p>Quantas horas você quer estudar por dia?</p>
-    <input class="inp" type="number" id="goal-inp" style="width:100%" placeholder="Ex: 4" min="1" max="24">
-    <div class="modal-row">
-      <button class="btn btn-primary" style="flex:1" onclick="saveGoal()">Salvar meta</button>
-      <button class="btn" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);flex:1"
-              onclick="closeModal()">Cancelar</button>
-    </div>
-  </div>
-</div>
 
 <!-- ══════════════════════════════════════
      SCRIPTS

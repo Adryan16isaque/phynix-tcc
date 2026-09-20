@@ -1,0 +1,35 @@
+/* ════════════════════════════════════════════════════════════
+   IDENTIDADE VISUAL — FÊNIX
+   Avatares (logo, chat) com a imagem da fênix e a animação da
+   chama usada no ícone de sequência (streak) na sidebar.
+════════════════════════════════════════════════════════════ */
+
+.logo-fenix   { width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(255,100,0,0.7)); }
+.avatar-fenix { width: 26px; height: 26px; object-fit: contain; filter: drop-shadow(0 0 4px rgba(255,100,0,0.6)); }
+.msg-avatar .avatar-fenix { width: 21px; height: 21px; }
+
+/* ── Animação da chama (ícone SVG do streak-widget) ──────── */
+@keyframes flame-flicker1 {
+  0%,100% { transform: scaleX(1) scaleY(1) translateY(0); }
+  25%     { transform: scaleX(0.93) scaleY(1.05) translateY(-2px); }
+  50%     { transform: scaleX(1.05) scaleY(.97) translateY(1px); }
+  75%     { transform: scaleX(.96) scaleY(1.03) translateY(-1px); }
+}
+@keyframes flame-flicker2 {
+  0%,100% { transform: scaleX(1) scaleY(1); opacity: .75; }
+  33%     { transform: scaleX(1.08) scaleY(.94) translateY(2px); opacity: .85; }
+  66%     { transform: scaleX(.9) scaleY(1.07) translateY(-2px); opacity: .65; }
+}
+@keyframes flame-ember1 { 0% { transform: translate(0,0); opacity: 1; }   100% { transform: translate(-10px,-44px); opacity: 0; } }
+@keyframes flame-ember2 { 0% { transform: translate(0,0); opacity: 1; }   100% { transform: translate(11px,-50px);  opacity: 0; } }
+@keyframes flame-ember3 { 0% { transform: translate(0,0); opacity: .9; }  100% { transform: translate(-4px,-38px);  opacity: 0; } }
+@keyframes flame-ember4 { 0% { transform: translate(0,0); opacity: .85; } 100% { transform: translate(7px,-46px);   opacity: 0; } }
+@keyframes flame-glow   { 0%,100% { opacity: .3; } 50% { opacity: .55; } }
+
+.flame-f1  { transform-origin: 50% 95%; animation: flame-flicker1 1.2s ease-in-out infinite; }
+.flame-f2  { transform-origin: 50% 95%; animation: flame-flicker2 1.7s ease-in-out infinite; }
+.flame-glw { animation: flame-glow 1.4s ease-in-out infinite; }
+.flame-e1  { animation: flame-ember1 1.9s ease-out infinite; animation-delay: .1s; }
+.flame-e2  { animation: flame-ember2 2.2s ease-out infinite; animation-delay: .8s; }
+.flame-e3  { animation: flame-ember3 1.6s ease-out infinite; animation-delay: 1.3s; }
+.flame-e4  { animation: flame-ember4 2.5s ease-out infinite; animation-delay: .4s; }

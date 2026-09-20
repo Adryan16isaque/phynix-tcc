@@ -20,6 +20,7 @@ export async function loadCalendar() {
   state.studyLog    = data.studyLog;
   state.firesByDay  = data.firesByDay;
   state.streak      = data.stats.streak;
+  state.yearHours   = data.stats.yearHours;
 }
 
 // Aplica no estado local o resultado de um toggle de dia (marcar/
@@ -95,6 +96,7 @@ export function renderCalendar() {
     .filter(([day]) => day.startsWith(ym))
     .reduce((acc, [, v]) => acc + v.hours, 0);
   document.getElementById('stat-hours').textContent = monthHours + 'h';
+  document.getElementById('stat-year-hours').textContent = state.yearHours + 'h';
 
   const grid     = document.getElementById('cal-grid');
   grid.innerHTML = '';

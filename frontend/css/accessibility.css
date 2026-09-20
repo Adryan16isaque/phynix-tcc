@@ -152,7 +152,7 @@
    BOTÃO DE ENGRENAGEM ⚙️
 ════════════════════════════════════════════════════════════ */
 #settings-btn {
-  position: fixed; top: 16px; right: 16px; z-index: 600;
+  position: fixed; top: 5px; right: 16px; z-index: 600;
   width: 42px; height: 42px; border-radius: 50%;
   background: var(--surface); border: 1px solid var(--border);
   color: var(--text-dim); font-size: 20px; cursor: pointer;

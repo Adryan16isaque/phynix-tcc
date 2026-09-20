@@ -6,8 +6,9 @@
 import { renderPlanner } from './planner.js';
 import { renderCalendar } from './calendar.js';
 import { renderAchievements } from './achievements.js';
+import { loadHistoryList } from './chat.js';
 
-const TAB_ORDER = ['chat', 'planner', 'calendar', 'achievements'];
+const TAB_ORDER = ['chat', 'planner', 'calendar', 'achievements', 'history'];
 
 export function switchTab(tab) {
   document.querySelectorAll('.panel').forEach(p  => p.classList.remove('active'));
@@ -23,4 +24,5 @@ export function switchTab(tab) {
   if (tab === 'planner')      renderPlanner();
   if (tab === 'calendar')     renderCalendar();
   if (tab === 'achievements') renderAchievements();
+  if (tab === 'history')      loadHistoryList();
 }

@@ -8,7 +8,6 @@ import { state } from './state.js';
 import { loadSubjects, renderPlanner } from './planner.js';
 import { loadCalendar, renderCalendar } from './calendar.js';
 import { loadAchievements, renderAchievements } from './achievements.js';
-import { loadSettings } from './settings.js';
 
 export function switchAuthTab(tab) {
   document.getElementById('tab-login-btn').classList.toggle('active', tab === 'login');
@@ -103,7 +102,6 @@ async function loadEverything() {
     loadSubjects(),
     loadCalendar(),
     loadAchievements(),
-    loadSettings(),
   ]);
   renderPlanner();
   renderCalendar();

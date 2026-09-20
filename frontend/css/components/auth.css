@@ -158,18 +158,3 @@
   border-color: var(--danger);
   color: var(--danger);
 }
-
-/* Botão "🔥 Concluir hoje" na tabela do planner */
-.btn-fire {
-  background: rgba(249,115,22,0.14);
-  border: 1px solid var(--gold);
-  color: var(--gold);
-}
-
-.btn-fire:hover { background: rgba(249,115,22,0.24); }
-
-.btn-fire.done {
-  background: rgba(52,211,153,0.16);
-  border-color: var(--accent3);
-  color: var(--accent3);
-}

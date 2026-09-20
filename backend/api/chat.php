@@ -1,7 +1,8 @@
 <?php
 /* ═══════════════════════════════════════════════════════════
    /api/chat.php
-   GET    ?list=1                → lista histórico de conversas (preview)
+   GET    ?list=1&offset=0       → lista histórico de conversas (preview),
+                                    paginado de 10 em 10, mais recente primeiro
    GET    ?id=123                → devolve todas as mensagens de uma conversa
    POST   { message, sessionId? }              → envia mensagem nova
    PUT    { sessionId, messageId, content }    → edita uma mensagem do
@@ -78,15 +79,29 @@ function ownSessionOrFail(PDO $pdo, int $sessionId, int $userId): void
     if (!$stmt->fetch()) jsonError('Conversa não encontrada.', 404);
 }
 
-/** GET ?list=1 → lista histórico de conversas (preview). */
+/** GET ?list=1&offset=0 → lista histórico de conversas (preview), paginado. */
 function handleListSessions(PDO $pdo, int $userId): void
 {
+    $limit  = 10;
+    $offset = max(0, (int) ($_GET['offset'] ?? 0));
+
+    // Busca um a mais que a página pra saber se tem próxima, sem
+    // precisar de um segundo SELECT COUNT(*).
     $stmt = $pdo->prepare('
         SELECT id, preview, created_at, updated_at FROM chat_sessions
         WHERE user_id=? ORDER BY updated_at DESC
+        LIMIT ? OFFSET ?
     ');
-    $stmt->execute([$userId]);
-    jsonResponse(['sessions' => $stmt->fetchAll()]);
+    $stmt->bindValue(1, $userId, PDO::PARAM_INT);
+    $stmt->bindValue(2, $limit + 1, PDO::PARAM_INT);
+    $stmt->bindValue(3, $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $rows = $stmt->fetchAll();
+
+    $hasMore  = count($rows) > $limit;
+    $sessions = array_slice($rows, 0, $limit);
+
+    jsonResponse(['sessions' => $sessions, 'hasMore' => $hasMore]);
 }
 
 /** GET ?id=123 → devolve todas as mensagens de uma conversa. */

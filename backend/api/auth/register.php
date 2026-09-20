@@ -31,9 +31,6 @@ $stmt = $pdo->prepare('INSERT INTO users (name, email, password_hash) VALUES (?,
 $stmt->execute([$name, $email, $hash]);
 $userId = (int) $pdo->lastInsertId();
 
-// Cria configurações padrão
-$pdo->prepare('INSERT INTO settings (user_id, daily_goal_hours) VALUES (?, 4)')->execute([$userId]);
-
 $_SESSION['user_id'] = $userId;
 
 jsonResponse(['id' => $userId, 'name' => $name, 'email' => $email], 201);
