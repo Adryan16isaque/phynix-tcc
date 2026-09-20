@@ -1,0 +1,38 @@
+# Configuracao local e segredos
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/config/config.php
+backend/config/config.local.php
+
+# Dependencias e artefatos de ferramentas PHP
+/vendor/
+/backend/vendor/
+
+# Logs, cache e arquivos temporarios
+*.log
+*.tmp
+*.temp
+/cache/
+/tmp/
+
+# Arquivos gerados pelo sistema operacional e editores
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Cobertura e relatorios locais
+.phpunit.result.cache
+coverage/
+
+# Arquivos de backup locais
+*.bak
+*.orig
+*~
