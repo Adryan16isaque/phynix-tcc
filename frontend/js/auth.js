@@ -5,6 +5,7 @@
 
 import { api } from "./api.js";
 import { state, resetState } from "./state.js";
+import { switchTab } from "./tabs.js";
 import { startNewChat } from "./chat.js";
 import { loadSubjects, renderPlanner } from "./planner.js";
 import { loadCalendar, renderCalendar } from "./calendar.js";
@@ -77,8 +78,11 @@ export async function handleLogout() {
   try {
     await api("/auth/logout.php", { method: "POST" });
   } catch (e) {}
+
   resetState();
   startNewChat(); // limpa #messages e volta pra tela de boas-vindas
+  document.getElementById("history-list").innerHTML = ""; // ← novo: limpa o DOM do histórico
+  switchTab("chat"); // ← novo: sempre volta pra uma aba neutra
   document.getElementById("app").style.display = "none";
   document.getElementById("auth-screen").style.display = "flex";
   document.getElementById("login-email").value = "";
