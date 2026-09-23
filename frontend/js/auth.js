@@ -113,9 +113,18 @@ export async function checkSession() {
 }
 
 async function loadEverything() {
-  await Promise.all([loadSubjects(), loadCalendar(), loadAchievements()]);
+  const [subjectsR, calendarR, achievementsR] = await Promise.allSettled([
+    loadSubjects(),
+    loadCalendar(),
+    loadAchievements(),
+  ]);
+
   renderPlanner();
   renderCalendar();
   renderAchievements();
   document.getElementById("sidebar-streak").textContent = state.streak;
+
+  [subjectsR, calendarR, achievementsR].forEach((r) => {
+    if (r.status === "rejected") console.error("Falha ao carregar dados:", r.reason);
+  });
 }

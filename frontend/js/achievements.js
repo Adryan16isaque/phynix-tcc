@@ -11,8 +11,12 @@ import { state } from "./state.js";
 import { escapeHtml, showToast, fireConfetti } from "./ui.js";
 
 export async function loadAchievements() {
-  const { achievements } = await api("/achievements.php");
-  state.achievements = achievements;
+  try {
+    const { achievements } = await api("/achievements.php");
+    state.achievements = achievements;
+  } catch (err) {
+    state.achievementsError = err.message;
+  }
 }
 
 function mergeUnlocked(list, unlockedAchievements) {
@@ -35,9 +39,13 @@ function showAchievementToast(ach) {
 
 export function renderAchievements() {
   const grid = document.getElementById("ach-grid");
+
+  if (state.achievementsError) {
+    grid.innerHTML = `<div style="color:var(--text-muted);padding:20px">Não foi possível carregar as conquistas: ${escapeHtml(state.achievementsError)}</div>`;
+    return;
+  }
   if (!state.achievements.length) {
-    grid.innerHTML =
-      '<div style="color:var(--text-muted);padding:20px">Carregando conquistas…</div>';
+    grid.innerHTML = '<div style="color:var(--text-muted);padding:20px">Carregando conquistas…</div>';
     return;
   }
 
