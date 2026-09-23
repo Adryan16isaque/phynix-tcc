@@ -76,9 +76,7 @@ export async function handleRegister(e) {
 export async function handleLogout() {
   try {
     await api("/auth/logout.php", { method: "POST" });
-  } catch (e) {
-    /* ignora */
-  }
+  } catch (e) {}
   resetState();
   startNewChat(); // limpa #messages e volta pra tela de boas-vindas
   document.getElementById("app").style.display = "none";
@@ -88,12 +86,12 @@ export async function handleLogout() {
 }
 
 async function onLoginSuccess(user) {
+  resetState();
   state.user = user;
   document.getElementById("auth-screen").style.display = "none";
   document.getElementById("app").style.display = "";
   document.getElementById("sidebar-user-name").textContent =
     user.name || user.email;
-  resetState();
   await loadEverything();
 }
 
