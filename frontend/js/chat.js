@@ -6,11 +6,11 @@
    (que regenera a resposta da IA a partir do ponto editado).
    ═══════════════════════════════════════════════════════════ */
 
-import { api } from './api.js';
-import { state } from './state.js';
-import { escapeHtml, showToast } from './ui.js';
-import { handleUnlocked } from './achievements.js';
-import { switchTab } from './tabs.js';
+import { api } from "./api.js";
+import { state } from "./state.js";
+import { escapeHtml, showToast } from "./ui.js";
+import { handleUnlocked } from "./achievements.js";
+import { switchTab } from "./tabs.js";
 
 const WELCOME_HTML = `
   <div class="msg ai">
@@ -27,55 +27,61 @@ const WELCOME_HTML = `
   </div>`;
 
 export async function sendMessage() {
-  const inp  = document.getElementById('user-input');
+  const inp = document.getElementById("user-input");
   const text = inp.value.trim();
   if (!text) return;
 
-  inp.value = '';
-  inp.style.height = '';
-  document.getElementById('send-btn').disabled = true;
+  inp.value = "";
+  inp.style.height = "";
+  document.getElementById("send-btn").disabled = true;
 
-  const userMsgEl = appendMsg('user', text);
-  const typingEl  = appendTyping();
+  const userMsgEl = appendMsg("user", text);
+  const typingEl = appendTyping();
 
   try {
-    const data = await api('/chat.php', {
-      method: 'POST',
+    const data = await api("/chat.php", {
+      method: "POST",
       body: JSON.stringify({ message: text, sessionId: state.chatSessionId }),
     });
 
     typingEl.remove();
     state.chatSessionId = data.sessionId;
     userMsgEl.dataset.msgId = data.userMessageId;
-    appendMsg('ai', data.reply, data.assistantMessageId);
+    appendMsg("ai", data.reply, data.assistantMessageId);
     handleUnlocked(data.unlocked);
   } catch (err) {
     typingEl.remove();
-    appendMsg('ai', '⚠️ ' + (err.message || 'Não foi possível conectar à IA agora. Tente novamente em instantes.'));
+    appendMsg(
+      "ai",
+      "⚠️ " +
+        (err.message ||
+          "Não foi possível conectar à IA agora. Tente novamente em instantes."),
+    );
   } finally {
-    document.getElementById('send-btn').disabled = false;
+    document.getElementById("send-btn").disabled = false;
   }
 }
 
 function appendMsg(role, text, msgId = null) {
-  const normRole = role === 'assistant' ? 'ai' : role;
-  const wrap = document.getElementById('messages');
-  const div  = document.createElement('div');
-  div.className = 'msg ' + normRole;
+  const normRole = role === "assistant" ? "ai" : role;
+  const wrap = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = "msg " + normRole;
   if (msgId) div.dataset.msgId = msgId;
 
-  const editBtn = normRole === 'user'
-    ? `<button class="msg-edit-btn" onclick="startEditMessage(this)" aria-label="Editar mensagem" title="Editar mensagem">✏️</button>`
-    : '';
+  const editBtn =
+    normRole === "user"
+      ? `<button class="msg-edit-btn" onclick="startEditMessage(this)" aria-label="Editar mensagem" title="Editar mensagem">✏️</button>`
+      : "";
 
   div.innerHTML = `
-    <div class="msg-avatar">${normRole === 'ai' ? '<img src="assets/fenix.png" alt="" class="avatar-fenix">' : '👤'}</div>
+    <div class="msg-avatar">${normRole === "ai" ? '<img src="assets/fenix.png" alt="" class="avatar-fenix">' : "👤"}</div>
     <div class="msg-bubble">
       ${editBtn}
-      <div class="msg-bubble-content">${escapeHtml(text).replace(/\n/g, '<br>')}</div>
+      <div class="msg-bubble-content">${escapeHtml(text).replace(/\n/g, "<br>")}</div>
     </div>
   `;
-  div.querySelector('.msg-bubble').dataset.raw = text;
+  div.querySelector(".msg-bubble").dataset.raw = text;
 
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
@@ -83,9 +89,9 @@ function appendMsg(role, text, msgId = null) {
 }
 
 function appendTyping() {
-  const wrap = document.getElementById('messages');
-  const div  = document.createElement('div');
-  div.className = 'msg ai';
+  const wrap = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = "msg ai";
   div.innerHTML = `
     <div class="msg-avatar"><img src="assets/fenix.png" alt="" class="avatar-fenix"></div>
     <div class="msg-bubble">
@@ -98,31 +104,30 @@ function appendTyping() {
 }
 
 export function sendQuick(text) {
-  document.getElementById('user-input').value = text;
+  document.getElementById("user-input").value = text;
   sendMessage();
 }
 
 export function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
+  if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     sendMessage();
   }
 }
 
 // Auto-resize do textarea
-document.getElementById('user-input').addEventListener('input', function () {
-  this.style.height = '';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+document.getElementById("user-input").addEventListener("input", function () {
+  this.style.height = "";
+  this.style.height = Math.min(this.scrollHeight, 120) + "px";
 });
-
 
 /* ── Edição de mensagens já enviadas ─────────────────────── */
 export function startEditMessage(btnEl) {
-  const msgEl = btnEl.closest('.msg');
+  const msgEl = btnEl.closest(".msg");
   const msgId = msgEl.dataset.msgId;
   if (!msgId) return; // ainda sem confirmação do servidor, espera terminar de enviar
 
-  const bubble   = msgEl.querySelector('.msg-bubble');
+  const bubble = msgEl.querySelector(".msg-bubble");
   const original = bubble.dataset.raw;
 
   bubble.innerHTML = `
@@ -136,41 +141,45 @@ export function startEditMessage(btnEl) {
     </div>
   `;
 
-  const ta = bubble.querySelector('textarea');
+  const ta = bubble.querySelector("textarea");
   ta.focus();
   ta.setSelectionRange(ta.value.length, ta.value.length);
 }
 
 export function cancelEditMessage(btnEl) {
-  const bubble = btnEl.closest('.msg-bubble');
+  const bubble = btnEl.closest(".msg-bubble");
   restoreBubble(bubble, bubble.dataset.raw);
 }
 
 function restoreBubble(bubble, text) {
-  const msgEl  = bubble.closest('.msg');
-  const isUser = msgEl.classList.contains('user');
+  const msgEl = bubble.closest(".msg");
+  const isUser = msgEl.classList.contains("user");
   bubble.innerHTML = `
-    ${isUser ? '<button class="msg-edit-btn" onclick="startEditMessage(this)" aria-label="Editar mensagem" title="Editar mensagem">✏️</button>' : ''}
-    <div class="msg-bubble-content">${escapeHtml(text).replace(/\n/g, '<br>')}</div>
+    ${isUser ? '<button class="msg-edit-btn" onclick="startEditMessage(this)" aria-label="Editar mensagem" title="Editar mensagem">✏️</button>' : ""}
+    <div class="msg-bubble-content">${escapeHtml(text).replace(/\n/g, "<br>")}</div>
   `;
   bubble.dataset.raw = text;
 }
 
 export async function saveEditedMessage(btnEl) {
-  const bubble  = btnEl.closest('.msg-bubble');
-  const msgEl   = bubble.closest('.msg');
-  const msgId   = msgEl.dataset.msgId;
-  const ta      = bubble.querySelector('textarea');
+  const bubble = btnEl.closest(".msg-bubble");
+  const msgEl = bubble.closest(".msg");
+  const msgId = msgEl.dataset.msgId;
+  const ta = bubble.querySelector("textarea");
   const newText = ta.value.trim();
   if (!newText) return;
 
   btnEl.disabled = true;
-  btnEl.textContent = 'Enviando…';
+  btnEl.textContent = "Enviando…";
 
   try {
-    const data = await api('/chat.php', {
-      method: 'PUT',
-      body: JSON.stringify({ sessionId: state.chatSessionId, messageId: msgId, content: newText }),
+    const data = await api("/chat.php", {
+      method: "PUT",
+      body: JSON.stringify({
+        sessionId: state.chatSessionId,
+        messageId: msgId,
+        content: newText,
+      }),
     });
 
     restoreBubble(bubble, newText);
@@ -184,77 +193,93 @@ export async function saveEditedMessage(btnEl) {
       toRemove.remove();
     }
 
-    appendMsg('ai', data.reply, data.assistantMessageId);
+    appendMsg("ai", data.reply, data.assistantMessageId);
   } catch (err) {
-    showToast('⚠️', 'Erro ao editar', err.message);
+    showToast("⚠️", "Erro ao editar", err.message);
     btnEl.disabled = false;
-    btnEl.textContent = 'Salvar e reenviar';
+    btnEl.textContent = "Salvar e reenviar";
   }
 }
-
 
 /* ── Histórico de conversas ───────────────────────────────── */
 const HISTORY_PAGE_SIZE = 10;
 
 export async function loadHistoryList() {
   state.historySessions = [];
-  state.historyOffset   = 0;
-  state.historyHasMore  = false;
+  state.historyOffset = 0;
+  state.historyHasMore = false;
 
-  const list = document.getElementById('history-list');
+  const list = document.getElementById("history-list");
   list.innerHTML = '<div class="history-empty">Carregando…</div>';
   try {
-    const data = await api('/chat.php?list=1&offset=0');
+    const data = await api("/chat.php?list=1&offset=0");
     state.historySessions = data.sessions;
-    state.historyOffset   = data.sessions.length;
-    state.historyHasMore  = data.hasMore;
+    state.historyOffset = data.sessions.length;
+    state.historyHasMore = data.hasMore;
     renderHistoryList();
   } catch (err) {
-    list.innerHTML = '<div class="history-empty">Erro ao carregar histórico.</div>';
+    list.innerHTML =
+      '<div class="history-empty">Erro ao carregar histórico.</div>';
   }
 }
 
 export async function loadMoreHistory() {
-  const btn = document.getElementById('history-load-more');
-  if (btn) { btn.disabled = true; btn.textContent = 'Carregando…'; }
+  const btn = document.getElementById("history-load-more");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Carregando…";
+  }
 
   try {
     const data = await api(`/chat.php?list=1&offset=${state.historyOffset}`);
     state.historySessions = state.historySessions.concat(data.sessions);
-    state.historyOffset  += data.sessions.length;
-    state.historyHasMore  = data.hasMore;
+    state.historyOffset += data.sessions.length;
+    state.historyHasMore = data.hasMore;
     renderHistoryList();
   } catch (err) {
-    showToast('⚠️', 'Erro', err.message);
-    if (btn) { btn.disabled = false; btn.textContent = 'Carregar mais'; }
+    showToast("⚠️", "Erro", err.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Carregar mais";
+    }
   }
 }
 
 function renderHistoryList() {
-  const list     = document.getElementById('history-list');
+  const list = document.getElementById("history-list");
   const sessions = state.historySessions;
 
   if (!sessions.length) {
-    list.innerHTML = '<div class="history-empty">Nenhuma conversa ainda.<br>Envie uma mensagem pra começar!</div>';
+    list.innerHTML =
+      '<div class="history-empty">Nenhuma conversa ainda.<br>Envie uma mensagem pra começar!</div>';
     return;
   }
 
-  const cards = sessions.map(s => {
-    const active = String(s.id) === String(state.chatSessionId);
-    const dt = new Date((s.updated_at || s.created_at).replace(' ', 'T'));
-    const date = isNaN(dt) ? '' : dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const cards = sessions
+    .map((s) => {
+      const active = String(s.id) === String(state.chatSessionId);
+      const dt = new Date((s.updated_at || s.created_at).replace(" ", "T"));
+      const date = isNaN(dt)
+        ? ""
+        : dt.toLocaleDateString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
 
-    return `
-      <div class="ach-card ${active ? 'active' : ''}" onclick="openSession(${s.id})">
+      return `
+      <div class="ach-card ${active ? "active" : ""}" onclick="openSession(${s.id})">
         <button class="history-item-delete" onclick="deleteSession(event, ${s.id})" aria-label="Excluir conversa">🗑️</button>
         <div class="history-item-date">${date}</div>
-        <div class="history-item-preview">${escapeHtml(s.preview || 'Conversa')}</div>
+        <div class="history-item-preview">${escapeHtml(s.preview || "Conversa")}</div>
       </div>`;
-  }).join('');
+    })
+    .join("");
 
   const loadMoreBtn = state.historyHasMore
     ? '<button id="history-load-more" class="btn history-load-more" onclick="loadMoreHistory()">Carregar mais</button>'
-    : '';
+    : "";
 
   list.innerHTML = cards + loadMoreBtn;
 }
@@ -264,33 +289,34 @@ export async function openSession(id) {
     const { messages } = await api(`/chat.php?id=${id}`);
     state.chatSessionId = id;
 
-    const wrap = document.getElementById('messages');
-    wrap.innerHTML = '';
+    const wrap = document.getElementById("messages");
+    wrap.innerHTML = "";
     if (!messages.length) {
       wrap.innerHTML = WELCOME_HTML;
     } else {
-      messages.forEach(m => appendMsg(m.role, m.content, m.id));
+      messages.forEach((m) => appendMsg(m.role, m.content, m.id));
     }
-    switchTab('chat');
+    switchTab("chat");
   } catch (err) {
-    showToast('⚠️', 'Erro', err.message);
+    showToast("⚠️", "Erro", err.message);
   }
 }
 
 export async function deleteSession(evt, id) {
   evt.stopPropagation();
-  if (!confirm('Excluir essa conversa? Essa ação não pode ser desfeita.')) return;
+  if (!confirm("Excluir essa conversa? Essa ação não pode ser desfeita."))
+    return;
 
   try {
-    await api(`/chat.php?id=${id}`, { method: 'DELETE' });
+    await api(`/chat.php?id=${id}`, { method: "DELETE" });
     if (String(state.chatSessionId) === String(id)) startNewChat();
     await loadHistoryList();
   } catch (err) {
-    showToast('⚠️', 'Erro ao excluir', err.message);
+    showToast("⚠️", "Erro ao excluir", err.message);
   }
 }
 
 export function startNewChat() {
   state.chatSessionId = null;
-  document.getElementById('messages').innerHTML = WELCOME_HTML;
+  document.getElementById("messages").innerHTML = WELCOME_HTML;
 }

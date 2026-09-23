@@ -22,7 +22,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 32px 28px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
 }
 
 .auth-logo {
@@ -41,13 +41,15 @@
 }
 
 .auth-logo .logo-text {
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   font-size: 22px;
   font-weight: 800;
   color: var(--text);
 }
 
-.auth-logo .logo-text span { color: var(--accent); }
+.auth-logo .logo-text span {
+  color: var(--accent);
+}
 
 .auth-tabs {
   display: flex;
@@ -64,7 +66,7 @@
   border: none;
   background: transparent;
   color: var(--text-dim);
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-size: 14px;
   font-weight: 600;
   border-radius: 8px;
@@ -83,7 +85,9 @@
   gap: 6px;
 }
 
-.auth-form.active { display: flex; }
+.auth-form.active {
+  display: flex;
+}
 
 .auth-label {
   font-size: 12px;
@@ -111,7 +115,7 @@
 
 .auth-error {
   display: none;
-  background: rgba(248,113,113,0.12);
+  background: rgba(248, 113, 113, 0.12);
   border: 1px solid var(--danger);
   color: var(--danger);
   font-size: 13px;
@@ -120,7 +124,9 @@
   margin-bottom: 16px;
 }
 
-.auth-error.show { display: block; }
+.auth-error.show {
+  display: block;
+}
 
 /* ── Área do usuário / logout na sidebar ─────────────────── */
 .sidebar-user {
@@ -145,7 +151,7 @@
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--text-dim);
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-size: 13px;
   font-weight: 600;
   padding: 8px 10px;
