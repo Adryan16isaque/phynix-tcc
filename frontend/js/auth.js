@@ -4,7 +4,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 import { api } from "./api.js";
-import { stat, resetState } from "./state.js";
+import { state, resetState } from "./state.js";
 import { startNewChat } from "./chat.js";
 import { loadSubjects, renderPlanner } from "./planner.js";
 import { loadCalendar, renderCalendar } from "./calendar.js";
@@ -93,6 +93,7 @@ async function onLoginSuccess(user) {
   document.getElementById("app").style.display = "";
   document.getElementById("sidebar-user-name").textContent =
     user.name || user.email;
+  resetState();
   await loadEverything();
 }
 
