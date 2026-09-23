@@ -4,7 +4,8 @@
    ═══════════════════════════════════════════════════════════ */
 
 import { api } from "./api.js";
-import { state } from "./state.js";
+import { stat, resetState } from "./state.js";
+import { startNewChat } from "./chat.js";
 import { loadSubjects, renderPlanner } from "./planner.js";
 import { loadCalendar, renderCalendar } from "./calendar.js";
 import { loadAchievements, renderAchievements } from "./achievements.js";
@@ -78,7 +79,8 @@ export async function handleLogout() {
   } catch (e) {
     /* ignora */
   }
-  state.user = null;
+  resetState();
+  startNewChat(); // limpa #messages e volta pra tela de boas-vindas
   document.getElementById("app").style.display = "none";
   document.getElementById("auth-screen").style.display = "flex";
   document.getElementById("login-email").value = "";
@@ -125,6 +127,7 @@ async function loadEverything() {
   document.getElementById("sidebar-streak").textContent = state.streak;
 
   [subjectsR, calendarR, achievementsR].forEach((r) => {
-    if (r.status === "rejected") console.error("Falha ao carregar dados:", r.reason);
+    if (r.status === "rejected")
+      console.error("Falha ao carregar dados:", r.reason);
   });
 }

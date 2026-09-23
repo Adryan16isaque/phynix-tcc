@@ -20,3 +20,17 @@ export const state = {
   calendarMonth: new Date().getMonth(),
   calendarYear: new Date().getFullYear(),
 };
+export function resetState() {
+  state.user = null;
+  state.subjects = [];
+  state.studyLog = {};
+  state.studiedDays = [];
+  state.firesByDay = {};
+  state.achievements = [];
+  state.streak = 0;
+  state.yearHours = 0;
+  state.chatSessionId = null;
+  state.historySessions = [];
+  state.historyOffset = 0;
+  state.historyHasMore = false;
+}
