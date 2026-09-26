@@ -11,6 +11,11 @@ RUN docker-php-ext-install pdo pdo_mysql
 COPY . /var/www/html/
 RUN chown -R www-data:www-data /var/www/html
 
+# Fix para um bug conhecido no Railway: a imagem php:*-apache às vezes
+# sobe com dois MPMs habilitados ao mesmo tempo (mpm_event + mpm_prefork),
+# o que trava o Apache com "More than one MPM loaded". Força só o prefork.
+RUN a2dismod mpm_event mpm_worker 2>/dev/null; a2enmod mpm_prefork
+
 EXPOSE 80
 
 # O Railway injeta a porta certa na variável $PORT — ajusta o Apache
