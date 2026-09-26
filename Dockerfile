@@ -11,13 +11,16 @@ RUN docker-php-ext-install pdo pdo_mysql
 COPY . /var/www/html/
 RUN chown -R www-data:www-data /var/www/html
 
-# Fix para um bug conhecido no Railway: a imagem php:*-apache às vezes
-# sobe com dois MPMs habilitados ao mesmo tempo (mpm_event + mpm_prefork),
-# o que trava o Apache com "More than one MPM loaded". Força só o prefork.
-RUN a2dismod mpm_event mpm_worker 2>/dev/null; a2enmod mpm_prefork
-
 EXPOSE 80
 
-# O Railway injeta a porta certa na variável $PORT — ajusta o Apache
-# pra escutar nela em vez da 80 fixa.
-CMD sh -c "sed -i \"s/80/\${PORT:-80}/g\" /etc/apache2/ports.conf /etc/apache2/sites-enabled/000-default.conf && apache2-foreground"
+# O runtime do Railway (não o build) às vezes reativa mpm_event/mpm_worker
+# depois da imagem pronta, causando "More than one MPM loaded" mesmo com o
+# Dockerfile correto. Por isso o fix roda aqui, na inicialização do
+# container, e não como RUN no build.
+CMD ["bash", "-lc", "set -e; \
+  sed -i \"s/80/${PORT:-80}/g\" /etc/apache2/ports.conf /etc/apache2/sites-enabled/000-default.conf; \
+  a2dismod mpm_event mpm_worker || true; \
+  rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.* || true; \
+  a2enmod mpm_prefork; \
+  apache2ctl -t; \
+  exec apache2-foreground"]
