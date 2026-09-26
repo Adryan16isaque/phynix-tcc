@@ -37,6 +37,8 @@
 
     <!-- Identidade visual da fênix (avatares, logo, chama animada) -->
     <link rel="stylesheet" href="css/components/fenix.css" />
+
+    <link rel="stylesheet" href="css/components/profile.css" />
   </head>
   <body>
     <!-- ══════════════════════════════════════
@@ -194,6 +196,14 @@
           <span class="icon">🕓</span> Histórico
         </button>
 
+        <button
+          class="nav-btn"
+          onclick="switchTab('profile')"
+          aria-label="Perfil"
+        >
+          <span class="icon">👤</span> Perfil
+        </button>
+
         <div
           class="streak-widget"
           onclick="switchTab('achievements')"
@@ -309,6 +319,9 @@
           </button>
           <button class="tab" onclick="switchTab('history')" role="tab">
             🕓 Histórico
+          </button>
+          <button class="tab" onclick="switchTab('profile')" role="tab">
+            👤 Perfil
           </button>
         </div>
 
@@ -600,6 +613,9 @@
           </div>
         </div>
         <!-- /history-panel -->
+        <!-- ── PAINEL: PERFIL ── -->
+        <div class="panel" id="profile-panel"></div>
+        <!-- /profile-panel -->
       </main>
     </div>
     <!-- /app -->

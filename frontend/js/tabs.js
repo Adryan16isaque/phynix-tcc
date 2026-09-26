@@ -1,14 +1,23 @@
 /* ═══════════════════════════════════════════════════════════
    TABS.JS — Navegação entre as abas do app (chat/planner/
-   calendário/conquistas), re-renderizando a aba ao entrar nela.
+   calendário/conquistas/histórico/perfil), re-renderizando a
+   aba ao entrar nela.
    ═══════════════════════════════════════════════════════════ */
 
 import { renderPlanner } from "./planner.js";
 import { renderCalendar } from "./calendar.js";
 import { renderAchievements } from "./achievements.js";
 import { loadHistoryList } from "./chat.js";
+import { renderProfile } from "./profile.js";
 
-const TAB_ORDER = ["chat", "planner", "calendar", "achievements", "history"];
+const TAB_ORDER = [
+  "chat",
+  "planner",
+  "calendar",
+  "achievements",
+  "history",
+  "profile",
+];
 
 export function switchTab(tab) {
   document
@@ -31,4 +40,5 @@ export function switchTab(tab) {
   if (tab === "calendar") renderCalendar();
   if (tab === "achievements") renderAchievements();
   if (tab === "history") loadHistoryList();
+  if (tab === "profile") renderProfile();
 }
