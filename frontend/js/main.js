@@ -34,7 +34,6 @@ import {
   completeSubject,
 } from "./planner.js";
 import { markToday, changeMonth } from "./calendar.js";
-import { saveGoal, confirmDeleteAccount } from "./profile.js";
 
 Object.assign(window, {
   // Autenticação
@@ -63,9 +62,6 @@ Object.assign(window, {
   // Calendário
   markToday,
   changeMonth,
-  // Perfil
-  saveGoal,
-  confirmDeleteAccount,
 });
 
 checkSession();
