@@ -74,11 +74,19 @@ function appendMsg(role, text, msgId = null) {
       ? `<button class="msg-edit-btn" onclick="startEditMessage(this)" aria-label="Editar mensagem" title="Editar mensagem">✏️</button>`
       : "";
 
+  // Mensagens da IA: interpreta Markdown (negrito, listas, código...) e
+  // sanitiza o HTML resultante antes de inserir. Mensagens do usuário
+  // continuam como texto puro, sem interpretar marcação nenhuma.
+  const bodyHtml =
+    normRole === "ai"
+      ? DOMPurify.sanitize(marked.parse(text))
+      : escapeHtml(text).replace(/\n/g, "<br>");
+
   div.innerHTML = `
     <div class="msg-avatar">${normRole === "ai" ? '<img src="assets/fenix.png" alt="" class="avatar-fenix">' : "👤"}</div>
     <div class="msg-bubble">
       ${editBtn}
-      <div class="msg-bubble-content">${escapeHtml(text).replace(/\n/g, "<br>")}</div>
+      <div class="msg-bubble-content">${bodyHtml}</div>
     </div>
   `;
   div.querySelector(".msg-bubble").dataset.raw = text;
