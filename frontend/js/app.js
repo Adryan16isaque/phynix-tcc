@@ -64,6 +64,8 @@ export function resetState() {
   state.historySessions = [];
   state.historyOffset = 0;
   state.historyHasMore = false;
+  state.calendarMonth = new Date().getMonth();
+  state.calendarYear = new Date().getFullYear();
 }
 
 /* ───────────────────────────────────────────────────────────

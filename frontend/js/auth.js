@@ -3,7 +3,7 @@
    dos dados do usuário logo após autenticar.
    ═══════════════════════════════════════════════════════════ */
 
-import { api, state, resetState } from "./app.js";
+import { api, state, resetState, switchTab } from "./app.js";
 import { startNewChat } from "./chat.js";
 import { loadSubjects, renderPlanner } from "./planner.js";
 import { loadCalendar, renderCalendar } from "./calendar.js";
@@ -72,6 +72,27 @@ export async function handleRegister(e) {
   return false;
 }
 
+/** Esvazia o HTML de TODOS os painéis que mostram dados da conta.
+ *  resetState() só limpa a memória (JS); o que já foi desenhado na
+ *  tela (innerHTML) continua lá, e alguns painéis (Perfil, Histórico)
+ *  só são redesenhados quando a aba é aberta — então, sem esta
+ *  limpeza, a conta seguinte via os dados da anterior. Ao criar um
+ *  painel novo que dependa do usuário, inclua o id dele nesta lista. */
+function clearUserUI() {
+  [
+    "profile-panel",
+    "history-list",
+    "planner-body",
+    "cal-grid",
+    "ach-grid",
+    "sidebar-user-name",
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = "";
+  });
+  document.getElementById("sidebar-streak").textContent = "0";
+}
+
 /** Sai da conta: avisa o servidor (destrói a sessão PHP) e limpa
  *  TUDO que ficou em memória no navegador — o state inteiro e a
  *  janela do chat. É essa limpeza que garante que, ao logar com
@@ -85,6 +106,8 @@ export async function handleLogout() {
   }
   resetState();
   startNewChat();
+  clearUserUI();
+  switchTab("chat"); // a próxima conta nunca abre numa aba com dados da anterior
   document.getElementById("app").style.display = "none";
   document.getElementById("auth-screen").style.display = "flex";
   document.getElementById("login-email").value = "";
@@ -92,13 +115,14 @@ export async function handleLogout() {
 }
 
 async function onLoginSuccess(user) {
-  state.user = user;
+  resetState();
+  state.user = user; // resetState() zera state.user — repõe depois
+  clearUserUI();
+  switchTab("chat"); // sempre começa no chat, nunca numa aba de outra conta
   document.getElementById("auth-screen").style.display = "none";
   document.getElementById("app").style.display = "";
   document.getElementById("sidebar-user-name").textContent =
     user.name || user.email;
-  resetState();
-  state.user = user; // resetState() zera state.user — repõe depois
   await loadEverything();
 }
 
