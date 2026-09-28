@@ -6,11 +6,8 @@
    (que regenera a resposta da IA a partir do ponto editado).
    ═══════════════════════════════════════════════════════════ */
 
-import { api } from "./api.js";
-import { state } from "./state.js";
-import { escapeHtml, showToast } from "./ui.js";
+import { api, state, escapeHtml, showToast, switchTab } from "./app.js";
 import { handleUnlocked } from "./achievements.js";
-import { switchTab } from "./tabs.js";
 
 const WELCOME_HTML = `
   <div class="msg ai">
@@ -62,6 +59,13 @@ export async function sendMessage() {
   }
 }
 
+/** Monta uma bolha de mensagem no chat.
+ *  Mensagens da IA passam pelo `marked` (Markdown → HTML) e depois
+ *  pelo `DOMPurify` (sanitiza o HTML resultante, removendo qualquer
+ *  coisa perigosa tipo <script> — importante porque esse texto vem
+ *  de uma IA, então é conteúdo "não confiável" como qualquer outro).
+ *  Mensagens do usuário continuam como texto puro (escapeHtml), sem
+ *  interpretar Markdown nenhum — é literalmente o que a pessoa digitou. */
 function appendMsg(role, text, msgId = null) {
   const normRole = role === "assistant" ? "ai" : role;
   const wrap = document.getElementById("messages");
@@ -74,9 +78,6 @@ function appendMsg(role, text, msgId = null) {
       ? `<button class="msg-edit-btn" onclick="startEditMessage(this)" aria-label="Editar mensagem" title="Editar mensagem">✏️</button>`
       : "";
 
-  // Mensagens da IA: interpreta Markdown (negrito, listas, código...) e
-  // sanitiza o HTML resultante antes de inserir. Mensagens do usuário
-  // continuam como texto puro, sem interpretar marcação nenhuma.
   const bodyHtml =
     normRole === "ai"
       ? DOMPurify.sanitize(marked.parse(text))

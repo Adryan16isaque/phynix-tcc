@@ -3,9 +3,7 @@
    estudo e opção de apagar a conta.
    ═══════════════════════════════════════════════════════════ */
 
-import { state } from "./state.js";
-import { api } from "./api.js";
-import { escapeHtml } from "./ui.js";
+import { state, api, escapeHtml } from "./app.js";
 import { handleLogout } from "./auth.js";
 
 function fmtDate(value) {
@@ -17,6 +15,16 @@ function fmtDate(value) {
 
 export async function renderProfile() {
   const panel = document.getElementById("profile-panel");
+
+  // login.php/register.php não devolvem `created_at`, só o /auth/me.php.
+  // Sem essa busca, "Conta criada em" ficaria "—" logo após entrar.
+  try {
+    const { user: fresh } = await api("/auth/me.php");
+    if (fresh) state.user = fresh;
+  } catch (err) {
+    // sem problema: mostra o que já tem em memória
+  }
+
   const unlockedCount = state.achievements.filter((a) => a.unlocked).length;
   const user = state.user || {};
 

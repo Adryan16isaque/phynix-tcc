@@ -2,9 +2,7 @@
    CALENDAR.JS — Calendário, streak e marcação de dias estudados.
    ═══════════════════════════════════════════════════════════ */
 
-import { api } from "./api.js";
-import { state } from "./state.js";
-import { showToast } from "./ui.js";
+import { api, state, showToast } from "./app.js";
 import { handleUnlocked } from "./achievements.js";
 
 export function fmtDate(d) {

@@ -1,11 +1,24 @@
 /* ═══════════════════════════════════════════════════════════
    PROFILE.CSS — Aba de Perfil
+
+   IMPORTANTE: este seletor NÃO define `display`. Quem mostra/
+   esconde o painel é o `.panel` / `.panel.active` do main.css
+   (display: none ↔ display: flex). Como um seletor por id
+   (#profile-panel) tem mais prioridade que um por classe (.panel),
+   qualquer `display` colocado aqui sobrescreveria o `display: none`
+   e o painel ficaria visível o tempo todo, mesmo em outras abas.
+   Mesmo padrão usado em #achievements-panel e #history-panel.
    ═══════════════════════════════════════════════════════════ */
 
 #profile-panel {
-  display: flex;
-  flex-direction: column;
+  overflow-y: auto;
+  padding: 24px;
   gap: 16px;
+}
+
+/* Limita a largura do conteúdo sem mexer no painel em si */
+#profile-panel > * {
+  width: 100%;
   max-width: 640px;
 }
 
@@ -45,6 +58,12 @@
   max-width: 100px;
 }
 
+/* .stats-row (calendar.css) tem margin-bottom próprio; aqui o
+   espaçamento vem do gap do painel */
+#profile-panel .stats-row {
+  margin-bottom: 0;
+}
+
 .profile-danger {
   display: flex;
   justify-content: space-between;
@@ -63,5 +82,8 @@
   .profile-danger {
     flex-direction: column;
     align-items: flex-start;
+  }
+  #profile-panel .stats-row {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
