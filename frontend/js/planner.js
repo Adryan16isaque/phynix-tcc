@@ -2,9 +2,7 @@
    PLANNER.JS — Matérias, metas de horas e conclusões diárias.
    ═══════════════════════════════════════════════════════════ */
 
-import { api } from "./api.js";
-import { state } from "./state.js";
-import { escapeHtml, showToast } from "./ui.js";
+import { api, state, escapeHtml, showToast } from "./app.js";
 import { handleUnlocked } from "./achievements.js";
 import { renderCalendar, fmtDate } from "./calendar.js";
 

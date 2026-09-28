@@ -3,9 +3,7 @@
    dos dados do usuário logo após autenticar.
    ═══════════════════════════════════════════════════════════ */
 
-import { api } from "./api.js";
-import { state, resetState } from "./state.js";
-import { switchTab } from "./tabs.js";
+import { api, state, resetState } from "./app.js";
 import { startNewChat } from "./chat.js";
 import { loadSubjects, renderPlanner } from "./planner.js";
 import { loadCalendar, renderCalendar } from "./calendar.js";
@@ -74,15 +72,19 @@ export async function handleRegister(e) {
   return false;
 }
 
+/** Sai da conta: avisa o servidor (destrói a sessão PHP) e limpa
+ *  TUDO que ficou em memória no navegador — o state inteiro e a
+ *  janela do chat. É essa limpeza que garante que, ao logar com
+ *  outra conta na mesma aba (sem dar F5), nada da conta anterior
+ *  continua aparecendo na tela. */
 export async function handleLogout() {
   try {
     await api("/auth/logout.php", { method: "POST" });
-  } catch (e) {}
-
+  } catch (e) {
+    /* ignora — mesmo se a chamada falhar, ainda assim limpa o front */
+  }
   resetState();
-  startNewChat(); // limpa #messages e volta pra tela de boas-vindas
-  document.getElementById("history-list").innerHTML = ""; // ← novo: limpa o DOM do histórico
-  switchTab("chat"); // ← novo: sempre volta pra uma aba neutra
+  startNewChat();
   document.getElementById("app").style.display = "none";
   document.getElementById("auth-screen").style.display = "flex";
   document.getElementById("login-email").value = "";
@@ -90,12 +92,13 @@ export async function handleLogout() {
 }
 
 async function onLoginSuccess(user) {
-  resetState();
   state.user = user;
   document.getElementById("auth-screen").style.display = "none";
   document.getElementById("app").style.display = "";
   document.getElementById("sidebar-user-name").textContent =
     user.name || user.email;
+  resetState();
+  state.user = user; // resetState() zera state.user — repõe depois
   await loadEverything();
 }
 
@@ -117,6 +120,12 @@ export async function checkSession() {
   }
 }
 
+/** Carrega em paralelo os 3 blocos de dados da conta. Usa
+ *  Promise.allSettled (não Promise.all) de propósito: se UMA
+ *  chamada falhar (ex: erro de rede só no /achievements.php), as
+ *  outras duas ainda terminam e suas abas são desenhadas — com
+ *  Promise.all, uma falha sozinha travaria as três abas com a
+ *  tela de "Carregando..." pra sempre, sem mostrar nada de errado. */
 async function loadEverything() {
   const [subjectsR, calendarR, achievementsR] = await Promise.allSettled([
     loadSubjects(),

@@ -6,14 +6,13 @@
    dessincronizados.
    ═══════════════════════════════════════════════════════════ */
 
-import { api } from "./api.js";
-import { state } from "./state.js";
-import { escapeHtml, showToast, fireConfetti } from "./ui.js";
+import { api, state, escapeHtml, showToast, fireConfetti } from "./app.js";
 
 export async function loadAchievements() {
   try {
     const { achievements } = await api("/achievements.php");
     state.achievements = achievements;
+    state.achievementsError = null;
   } catch (err) {
     state.achievementsError = err.message;
   }
@@ -40,12 +39,16 @@ function showAchievementToast(ach) {
 export function renderAchievements() {
   const grid = document.getElementById("ach-grid");
 
+  // Distingue "ainda carregando" de "deu erro ao carregar" — sem
+  // isso, um erro de rede deixava a tela presa em "Carregando..."
+  // pra sempre, sem nenhum aviso do que aconteceu de fato.
   if (state.achievementsError) {
     grid.innerHTML = `<div style="color:var(--text-muted);padding:20px">Não foi possível carregar as conquistas: ${escapeHtml(state.achievementsError)}</div>`;
     return;
   }
   if (!state.achievements.length) {
-    grid.innerHTML = '<div style="color:var(--text-muted);padding:20px">Carregando conquistas…</div>';
+    grid.innerHTML =
+      '<div style="color:var(--text-muted);padding:20px">Carregando conquistas…</div>';
     return;
   }
 
