@@ -1,11 +1,7 @@
 /* ════════════════════════════════════════════════════════════
    HISTÓRICO DE CONVERSAS (aba própria, grid de cards)
 ════════════════════════════════════════════════════════════ */
-#history-panel {
-  overflow-y: auto;
-  padding: 24px;
-  gap: 20px;
-}
+#history-panel { overflow-y: auto; padding: 24px; gap: 20px; }
 
 /* Cards de histórico reaproveitam o visual de .ach-card (conquistas),
    mas só eles ficam clicáveis — não afeta os cards de conquista. */
@@ -15,16 +11,12 @@
   align-items: flex-start;
 }
 
-#history-list .ach-card:hover {
-  transform: translateY(-2px);
-}
+#history-list .ach-card:hover { transform: translateY(-2px); }
 
 #history-list .ach-card.active {
   border-color: transparent;
   background: var(--surface2);
-  box-shadow:
-    0 0 0 1px var(--accent),
-    0 4px 24px rgba(79, 138, 255, 0.2);
+  box-shadow: 0 0 0 1px var(--accent), 0 4px 24px rgba(79,138,255,0.2);
 }
 
 .history-item-date {
@@ -37,7 +29,6 @@
 .history-item-preview {
   display: -webkit-box;
   -webkit-line-clamp: 3;
-  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   font-size: 13px;
@@ -47,23 +38,19 @@
 
 .history-item-delete {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 26px;
-  height: 26px;
+  top: 10px; right: 10px;
+  width: 26px; height: 26px;
   border-radius: 8px;
   border: none;
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
   font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
 }
 
 .history-item-delete:hover {
-  background: rgba(248, 113, 113, 0.15);
+  background: rgba(248,113,113,0.15);
   color: var(--danger);
 }
 

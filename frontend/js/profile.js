@@ -73,6 +73,12 @@ export async function renderProfile() {
       </div>
     </div>
 
+    <div class="profile-card profile-logout-mobile">
+      <button class="btn" style="width:100%" onclick="handleLogout()">
+        🚪 Sair da conta
+      </button>
+    </div>
+
     <div class="profile-card profile-danger">
       <div>
         <strong>Apagar minha conta</strong>

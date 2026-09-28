@@ -87,3 +87,15 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* "Sair" dentro do Perfil: só aparece no celular, onde a sidebar
+   (que tem o botão Sair no desktop) fica escondida. */
+.profile-logout-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .profile-logout-mobile {
+    display: flex;
+  }
+}

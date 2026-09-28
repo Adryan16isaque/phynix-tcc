@@ -90,6 +90,7 @@ body::before {
   z-index: 1;
   display: flex;
   height: 100vh;
+  height: 100dvh; /* celular: descontra a barra de endereço do navegador */
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -105,7 +106,11 @@ body::before {
   padding: 24px 16px;
   gap: 8px;
   position: relative;
-  overflow: hidden;
+  /* Se o conteúdo for mais alto que a tela (zoom 100% em notebook), a
+     sidebar rola em vez de cortar — e o "Sair" fica sempre visível
+     (ver .sidebar-user em auth.css, que é sticky no rodapé). */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 #sidebar::after {
@@ -384,6 +389,29 @@ body::before {
 /* ════════════════════════════════════════════════════════════
    RESPONSIVO
 ════════════════════════════════════════════════════════════ */
+
+/* Telas baixas (notebooks a 100% de zoom): compacta a sidebar pra
+   caber tudo sem precisar rolar. */
+@media (max-height: 820px) {
+  #sidebar {
+    padding: 14px 12px;
+    gap: 4px;
+  }
+  .logo {
+    padding: 4px 10px 12px;
+    margin-bottom: 4px;
+  }
+  .nav-btn {
+    padding: 8px 12px;
+  }
+  .streak-widget {
+    padding: 8px;
+  }
+  .streak-widget svg {
+    width: 34px;
+    height: 43px;
+  }
+}
 @media (max-width: 768px) {
   #sidebar {
     display: none;
