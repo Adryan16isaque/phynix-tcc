@@ -9,16 +9,18 @@ RUN docker-php-ext-install pdo pdo_mysql
 
 # Copia o projeto inteiro para a raiz do Apache
 COPY . /var/www/html/
+
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
 
-# O runtime do Railway (não o build) às vezes reativa mpm_event/mpm_worker
-# depois da imagem pronta, causando "More than one MPM loaded" mesmo com o
-# Dockerfile correto. Por isso o fix roda aqui, na inicialização do
-# container, e não como RUN no build.
+# O Railway fornece a variável PORT em runtime.
+# Substituímos somente as diretivas exatas de porta do Apache,
+# evitando alterar valores como 8080 para 80808080 em reinicializações.
 CMD ["bash", "-lc", "set -e; \
-  sed -i \"s/80/${PORT:-80}/g\" /etc/apache2/ports.conf /etc/apache2/sites-enabled/000-default.conf; \
+  PORT_VALUE=\"${PORT:-80}\"; \
+  sed -i -E \"s/^Listen [0-9]+$/Listen ${PORT_VALUE}/\" /etc/apache2/ports.conf; \
+  sed -i -E \"s#^<VirtualHost \\*:[0-9]+>#<VirtualHost *:${PORT_VALUE}>#\" /etc/apache2/sites-enabled/000-default.conf; \
   a2dismod mpm_event mpm_worker || true; \
   rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.* || true; \
   a2enmod mpm_prefork; \
