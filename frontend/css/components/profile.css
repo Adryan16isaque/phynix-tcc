@@ -150,3 +150,30 @@
   .profile-edit-actions button { flex: 1; min-width: 120px; }
   .profile-account .profile-field { gap: 10px; }
 }
+
+
+/* Alteração de e-mail: mantém a ação próxima ao endereço atual. */
+.profile-email-line {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.profile-email-line strong { overflow-wrap: anywhere; }
+.profile-email-trigger {
+  font-size: 12px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+}
+.profile-email-trigger:hover,
+.profile-email-trigger:focus-visible { border-color: var(--accent); }
+.profile-email-trigger[hidden] { display: none; }
+.profile-email-form input[aria-invalid="true"] { border-color: var(--danger); }
+@media (max-width: 640px) {
+  .profile-email-row { flex-direction: column; align-items: flex-start; }
+  .profile-email-line { justify-content: flex-start; width: 100%; }
+}
