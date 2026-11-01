@@ -11,34 +11,52 @@ export async function loadSubjects() {
   state.subjects = subjects;
 }
 
-export async function addSubject() {
-  const name = document.getElementById("inp-subject").value.trim();
-  const hours = parseFloat(document.getElementById("inp-hours").value);
-  const days = document.getElementById("inp-days").value.trim() || "5";
-  const color = document.getElementById("inp-color").value;
+let addingSubject = false;
 
-  if (!name || !hours) {
-    showToast(
-      "⚠️",
-      "Campos obrigatórios",
-      "Preencha a matéria e a meta de horas.",
-    );
+export async function addSubject() {
+  const nameInput = document.getElementById("inp-subject");
+  const hoursInput = document.getElementById("inp-hours");
+  const daysInput = document.getElementById("inp-days");
+  const colorInput = document.getElementById("inp-color");
+  const submitButton = document.getElementById("add-subject-btn");
+
+  // A chamada pode vir do formulário ou do onclick legado.
+  // Não dispare duas requisições se a pessoa clicar rapidamente.
+  if (addingSubject) return;
+  const name = nameInput.value.trim();
+  const hours = Number(hoursInput.value);
+  const daysRaw = daysInput.value.trim();
+  const days = daysRaw === "" ? "5" : daysRaw;
+  const color = colorInput.value;
+
+  if (!name) {
+    showToast("⚠️", "Matéria obrigatória", "Informe um nome para a matéria.");
+    nameInput.focus();
+    return;
+  }
+  if (!Number.isFinite(hours) || hours < 1 || hours > 200) {
+    showToast("⚠️", "Meta inválida", "Informe de 1 a 200 horas por mês.");
+    hoursInput.focus();
+    return;
+  }
+  if (daysRaw !== "" && (!Number.isInteger(Number(daysRaw)) || +daysRaw < 1 || +daysRaw > 7)) {
+    showToast("⚠️", "Dias inválidos", "Use um número entre 1 e 7 dias por semana.");
+    daysInput.focus();
     return;
   }
 
+  addingSubject = true;
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = "Adicionando…";
+  }
   try {
     const data = await api("/subjects.php", {
       method: "POST",
       body: JSON.stringify({ name, targetHours: hours, days, color }),
     });
 
-    document.getElementById("inp-subject").value = "";
-    document.getElementById("inp-hours").value = "";
-    document.getElementById("inp-days").value = "";
-
-    // Matéria recém-criada sempre começa zerada — monta o objeto local
-    // com os dados que a própria resposta e o formulário já dão, sem
-    // precisar recarregar a lista inteira de /subjects.php.
+    // Preserva exatamente o contrato e os campos do Planner existente.
     state.subjects.push({
       id: data.id,
       name,
@@ -51,10 +69,20 @@ export async function addSubject() {
       doneToday: false,
       totalFires: 0,
     });
+    nameInput.value = "";
+    hoursInput.value = "";
+    daysInput.value = "";
     renderPlanner();
+    showToast("✅", "Matéria adicionada", `${name} já aparece no seu Planner.`);
     handleUnlocked(data.unlocked);
   } catch (err) {
     showToast("⚠️", "Erro ao adicionar", err.message);
+  } finally {
+    addingSubject = false;
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = "+ Adicionar matéria";
+    }
   }
 }
 

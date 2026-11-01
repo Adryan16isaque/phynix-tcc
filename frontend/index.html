@@ -27,10 +27,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css" integrity="sha384-WwGtaC6ywCHxA5cstpj/3+xIZvTez8dq2IcBQaXRkenHZ7FVVq1ZROtURwfbtTlG" crossorigin="anonymous" />
 
     <!-- Estilos do planejador de estudos (tabela, badges, progresso) -->
-    <link rel="stylesheet" href="css/components/planner.css" />
+    <link rel="stylesheet" href="css/components/planner.css?v=ux-2" />
 
     <!-- Estilos do calendário e cards de estatísticas -->
-    <link rel="stylesheet" href="css/components/calendar.css" />
+    <link rel="stylesheet" href="css/components/calendar.css?v=ux-2" />
 
     <!-- Estilos da tela de conquistas -->
     <link rel="stylesheet" href="css/components/achievements.css" />
@@ -442,42 +442,46 @@
               Organize suas matérias, metas e acompanhe seu progresso.
             </div>
 
-            <div class="add-row">
-              <input
-                class="inp inp-subject"
-                type="text"
-                id="inp-subject"
-                placeholder="Matéria (ex: Matemática)"
-                aria-label="Matéria"
-              />
-              <input
-                class="inp inp-hours"
-                type="number"
-                id="inp-hours"
-                placeholder="Meta h"
-                min="1"
-                max="200"
-                aria-label="Meta de horas"
-              />
-              <input
-                class="inp inp-days"
-                type="text"
-                id="inp-days"
-                placeholder="Dias/sem"
-                aria-label="Dias por semana"
-              />
-              <input
-                class="inp"
-                type="color"
-                id="inp-color"
-                value="#4f8aff"
-                style="width: 46px; padding: 6px; cursor: pointer"
-                aria-label="Cor da matéria"
-              />
-              <button class="btn btn-primary" onclick="addSubject()">
-                + Adicionar
-              </button>
-            </div>
+            <!-- Cadastro de matéria: labels reais e explicação sobre a cor -->
+            <form class="planner-form" id="planner-form" onsubmit="addSubject(); return false;">
+              <div class="planner-form-grid">
+                <div class="planner-field planner-field-name">
+                  <label for="inp-subject">Nome da matéria <span aria-hidden="true">*</span></label>
+                  <input class="inp inp-subject" type="text" id="inp-subject"
+                    placeholder="Ex.: Matemática" maxlength="100" autocomplete="off"
+                    aria-describedby="help-subject" required />
+                  <small id="help-subject">Dê um nome fácil de reconhecer no Planner.</small>
+                </div>
+                <div class="planner-field">
+                  <label for="inp-hours">Meta mensal (horas) <span aria-hidden="true">*</span></label>
+                  <input class="inp inp-hours" type="number" id="inp-hours"
+                    placeholder="Ex.: 20" min="1" max="200" step="1"
+                    inputmode="decimal" aria-describedby="help-hours" required />
+                  <small id="help-hours">Horas planejadas para o mês.</small>
+                </div>
+                <div class="planner-field">
+                  <label for="inp-days">Dias por semana</label>
+                  <input class="inp inp-days" type="number" id="inp-days"
+                    placeholder="Ex.: 3" min="1" max="7" step="1"
+                    inputmode="numeric" aria-describedby="help-days" />
+                  <small id="help-days">Opcional: padrão de 5 dias.</small>
+                </div>
+                <div class="planner-field planner-field-color">
+                  <label for="inp-color">Cor da matéria</label>
+                  <div class="planner-color-control">
+                    <input type="color" id="inp-color" value="#4f8aff"
+                      aria-describedby="help-color" title="Escolher cor da matéria" />
+                    <label for="inp-color" class="planner-color-label">Clique na cor para alterar</label>
+                  </div>
+                  <small id="help-color">A cor identifica a matéria na tabela e no progresso.</small>
+                </div>
+                <div class="planner-field planner-field-submit">
+                  <button class="btn btn-primary planner-add-button" type="submit" id="add-subject-btn">
+                    + Adicionar matéria
+                  </button>
+                </div>
+              </div>
+            </form>
 
             <div class="table-wrap">
               <table
@@ -539,57 +543,31 @@
               </div>
             </div>
 
-            <div class="cal-header">
-              <div class="section-title">📅 Calendário de Estudos</div>
-              <div class="cal-nav">
-                <button
-                  class="cal-arrow"
-                  onclick="changeMonth(-1)"
-                  aria-label="Mês anterior"
-                >
-                  ‹
-                </button>
-                <div class="cal-month" id="cal-month-label">—</div>
-                <button
-                  class="cal-arrow"
-                  onclick="changeMonth(1)"
-                  aria-label="Próximo mês"
-                >
-                  ›
-                </button>
+            <div class="calendar-main">
+              <div class="cal-header">
+                <div class="section-title">📅 Calendário de Estudos</div>
+                <div class="cal-nav">
+                  <button class="cal-arrow" onclick="changeMonth(-1)"
+                    aria-label="Mês anterior">‹</button>
+                  <div class="cal-month" id="cal-month-label">—</div>
+                  <button class="cal-arrow" onclick="changeMonth(1)"
+                    aria-label="Próximo mês">›</button>
+                </div>
               </div>
-            </div>
-
-            <div class="cal-grid" id="cal-grid" aria-label="Calendário"></div>
-
-            <div class="cal-legend">
-              <div class="cal-legend-item">
-                <div
-                  class="cal-legend-dot"
-                  style="background: rgba(79, 138, 255, 0.4)"
-                ></div>
-                Dia estudado
+              <p class="cal-instructions" id="cal-instructions">
+                Toque ou clique em um dia para registrar seus estudos. Dias futuros não podem ser marcados.
+              </p>
+              <div class="cal-grid" id="cal-grid" aria-label="Dias do mês"></div>
+              <div class="cal-legend">
+                <div class="cal-legend-item"><span class="cal-legend-dot" style="background:rgba(79,138,255,.4)"></span> Dia estudado</div>
+                <div class="cal-legend-item"><span class="cal-legend-dot" style="background:rgba(245,158,11,.4)"></span> Sequência ativa</div>
+                <div class="cal-legend-item"><span class="cal-legend-dot" style="border:2px solid var(--accent)"></span> Hoje</div>
               </div>
-              <div class="cal-legend-item">
-                <div
-                  class="cal-legend-dot"
-                  style="background: rgba(245, 158, 11, 0.4)"
-                ></div>
-                Sequência ativa
+              <div class="cal-action-row">
+                <button class="btn btn-primary" type="button" id="cal-today-btn"
+                  onclick="markToday()">✅ Marcar hoje como estudado</button>
+                <span class="cal-action-hint" id="cal-today-hint" role="status" aria-live="polite"></span>
               </div>
-              <div class="cal-legend-item">
-                <div
-                  class="cal-legend-dot"
-                  style="border: 2px solid var(--accent)"
-                ></div>
-                Hoje
-              </div>
-            </div>
-
-            <div style="margin-top: 20px">
-              <button class="btn btn-primary" onclick="markToday()">
-                ✅ Marcar hoje como estudado
-              </button>
             </div>
           </div>
         </div>
@@ -648,6 +626,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.5/purify.min.js"></script>
     <!-- Biblioteca matemática (após marked e DOMPurify; antes do módulo do app) -->
     <script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script>
-    <script type="module" src="./js/app.js?v=math-1"></script>
+    <script type="module" src="./js/app.js?v=ux-2"></script>
   </body>
 </html>

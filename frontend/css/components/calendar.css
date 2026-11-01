@@ -185,3 +185,46 @@
   font-size: 24px;
   margin-bottom: 6px;
 }
+
+
+/* ═══ PHYNIX UX v2: calendário compacto e controles claros ═══ */
+#calendar-panel .stats-row { max-width: 1000px; margin-left: auto; margin-right: auto; }
+#calendar-panel .calendar-main { width: 100%; max-width: 680px; margin: 0 auto; }
+#calendar-panel .cal-header { gap: 12px; }
+#calendar-panel .cal-grid { padding: 12px; gap: 3px; }
+#calendar-panel button.cal-day {
+  appearance: none; -webkit-appearance: none;
+  border: 1px solid transparent; background: transparent; font: inherit;
+  font-size: 13px; color: var(--text-dim); padding: 4px; min-width: 0;
+}
+#calendar-panel button.cal-day.today { border: 2px solid var(--accent); color: var(--accent); font-weight: 700; }
+#calendar-panel button.cal-day.studied { background: rgba(79,138,255,.14); color: var(--text); }
+#calendar-panel button.cal-day.streak-day { background: rgba(245,158,11,.13); color: var(--gold); }
+#calendar-panel button.cal-day.streak-day .dot { background: var(--gold); }
+#calendar-panel button.cal-day:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#calendar-panel button.cal-day:disabled:not(.saving) { opacity: .35; cursor: not-allowed; }
+#calendar-panel button.cal-day.saving { opacity: .65; cursor: progress; }
+#calendar-panel .cal-arrow:disabled { opacity: .45; cursor: wait; }
+#calendar-panel .cal-instructions { color: var(--text-dim); font-size: 12px; line-height: 1.5; margin: -4px 0 10px; }
+#calendar-panel .cal-action-row { display: flex; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+#calendar-panel .cal-action-row .btn { min-height: 42px; }
+#calendar-panel .cal-action-row .btn:disabled { opacity: .7; cursor: progress; }
+#calendar-panel .cal-action-row .cal-action-done {
+  background: var(--surface2); border: 1px solid var(--accent3); color: var(--accent3);
+}
+#calendar-panel .cal-action-hint { color: var(--text-dim); font-size: 12px; }
+@media (max-width: 768px) {
+  #calendar-panel .calendar-main { max-width: 100%; }
+  #calendar-panel .cal-grid { padding: 8px; gap: 2px; }
+  #calendar-panel button.cal-day { font-size: 12px; }
+  #calendar-panel .cal-action-row .btn { width: 100%; }
+}
+
+/* Compactação vertical no desktop: mantém ação de registro mais visível. */
+@media (min-width: 769px) {
+  #calendar-panel .calendar-main { max-width: 600px; }
+  #calendar-panel .cal-day,
+  #calendar-panel button.cal-day { aspect-ratio: auto; height: 54px; min-height: 48px; }
+  #calendar-panel .cal-day-name { padding-bottom: 7px; }
+  #calendar-panel .cal-grid { padding: 10px; }
+}

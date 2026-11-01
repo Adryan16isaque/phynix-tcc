@@ -1,131 +1,142 @@
 /* ═══════════════════════════════════════════════════════════
    CALENDAR.JS — Calendário, streak e marcação de dias estudados.
+   Mantém os endpoints existentes; melhora feedback, acessibilidade,
+   prevenção de cliques duplicados e navegação entre os meses.
    ═══════════════════════════════════════════════════════════ */
 
 import { api, state, showToast } from "./app.js";
 import { handleUnlocked } from "./achievements.js";
 
+const MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+const DAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+let pendingDay = null;
+let changingMonth = false;
+
 export function fmtDate(d) {
-  return (
-    d.getFullYear() +
-    "-" +
-    String(d.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(d.getDate()).padStart(2, "0")
-  );
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")
+    + "-" + String(d.getDate()).padStart(2, "0");
 }
 
 export async function loadCalendar() {
-  const y = state.calendarYear,
-    m = state.calendarMonth + 1;
+  const y = state.calendarYear;
+  const m = state.calendarMonth + 1;
   const data = await api(`/calendar.php?year=${y}&month=${m}`);
-  state.studiedDays = data.studiedDays;
-  state.studyLog = data.studyLog;
-  state.firesByDay = data.firesByDay;
-  state.streak = data.stats.streak;
-  state.yearHours = data.stats.yearHours;
+  state.studiedDays = Array.isArray(data.studiedDays) ? data.studiedDays : [];
+  state.studyLog = data.studyLog && typeof data.studyLog === "object" ? data.studyLog : {};
+  state.firesByDay = data.firesByDay && typeof data.firesByDay === "object" ? data.firesByDay : {};
+  state.streak = Number(data.stats?.streak) || 0;
+  state.yearHours = Number(data.stats?.yearHours) || 0;
 }
 
-// Aplica no estado local o resultado de um toggle de dia (marcar/
-// desmarcar), sem precisar recarregar /calendar.php inteiro — a própria
-// resposta do POST já devolve 'marked' e o novo 'streak'.
 function applyDayToggle(key, marked, streak) {
   if (marked) {
     if (!state.studiedDays.includes(key)) state.studiedDays.push(key);
   } else {
     state.studiedDays = state.studiedDays.filter((d) => d !== key);
   }
-  state.streak = streak;
+  state.streak = Number(streak) || 0;
 }
 
-export async function markToday() {
-  const key = fmtDate(new Date());
+function isCurrentMonth() {
+  const now = new Date();
+  return state.calendarMonth === now.getMonth() && state.calendarYear === now.getFullYear();
+}
+
+// O endpoint /calendar.php alterna o estado; travamos cliques simultâneos
+// para não haver uma segunda requisição desmarcando a primeira.
+async function toggleDay(key) {
+  if (pendingDay !== null || changingMonth) return;
+  if (key > fmtDate(new Date())) {
+    showToast("📅", "Data futura", "Você só pode registrar hoje ou dias anteriores.");
+    return;
+  }
+  pendingDay = key;
+  renderCalendar();
   try {
     const data = await api("/calendar.php", {
       method: "POST",
       body: JSON.stringify({ date: key }),
     });
-    applyDayToggle(key, data.marked, data.streak);
-    renderCalendar();
-    document.getElementById("sidebar-streak").textContent = state.streak;
-
-    showToast(
-      data.marked ? "✅" : "↩️",
-      data.marked ? "Dia marcado!" : "Desmarcado",
-      data.marked
-        ? "Continue assim, você está indo muito bem!"
-        : "Dia de hoje desmarcado.",
-    );
-
+    applyDayToggle(key, Boolean(data.marked), data.streak);
+    showToast(data.marked ? "✅" : "↩️",
+      data.marked ? "Dia registrado" : "Registro desfeito",
+      data.marked ? `Estudo registrado em ${key.split("-").reverse().join("/")}.`
+        : "O dia foi desmarcado no calendário.");
     handleUnlocked(data.unlocked);
   } catch (err) {
-    showToast("⚠️", "Erro", err.message);
+    showToast("⚠️", "Não foi possível salvar", err.message);
+  } finally {
+    pendingDay = null;
+    renderCalendar();
+  }
+}
+
+async function goToMonth(year, month) {
+  if (changingMonth || pendingDay !== null) return;
+  const previousYear = state.calendarYear;
+  const previousMonth = state.calendarMonth;
+  changingMonth = true;
+  document.querySelectorAll("#calendar-panel .cal-arrow").forEach(b => { b.disabled = true; });
+  const hint = document.getElementById("cal-today-hint");
+  if (hint) hint.textContent = "Carregando calendário…";
+  state.calendarYear = year;
+  state.calendarMonth = month;
+  try {
+    await loadCalendar();
+  } catch (err) {
+    state.calendarYear = previousYear;
+    state.calendarMonth = previousMonth;
+    showToast("⚠️", "Erro ao mudar mês", err.message);
+    // Os dados do mês anterior continuam em memória.
+  } finally {
+    changingMonth = false;
+    renderCalendar();
   }
 }
 
 export async function changeMonth(dir) {
-  state.calendarMonth += dir;
-  if (state.calendarMonth > 11) {
-    state.calendarMonth = 0;
-    state.calendarYear++;
-  }
-  if (state.calendarMonth < 0) {
-    state.calendarMonth = 11;
-    state.calendarYear--;
-  }
-  await loadCalendar();
-  renderCalendar();
+  if (changingMonth || pendingDay !== null) return;
+  const target = new Date(state.calendarYear, state.calendarMonth + dir, 1);
+  await goToMonth(target.getFullYear(), target.getMonth());
 }
 
-async function toggleDay(key) {
-  try {
-    const data = await api("/calendar.php", {
-      method: "POST",
-      body: JSON.stringify({ date: key }),
-    });
-    applyDayToggle(key, data.marked, data.streak);
-    renderCalendar();
-    document.getElementById("sidebar-streak").textContent = state.streak;
-    handleUnlocked(data.unlocked);
-  } catch (err) {
-    showToast("⚠️", "Erro", err.message);
+export async function markToday() {
+  if (changingMonth || pendingDay !== null) return;
+  const today = new Date();
+  // Se estiver olhando outro mês, o botão passa a ser 'Voltar ao mês atual',
+  // em vez de alterar silenciosamente um dia que não está na tela.
+  if (!isCurrentMonth()) {
+    await goToMonth(today.getFullYear(), today.getMonth());
+    return;
   }
+  await toggleDay(fmtDate(today));
 }
 
 export function renderCalendar() {
-  const MONTHS = [
-    "Janeiro",
-    "Fevereiro",
-    "Março",
-    "Abril",
-    "Maio",
-    "Junho",
-    "Julho",
-    "Agosto",
-    "Setembro",
-    "Outubro",
-    "Novembro",
-    "Dezembro",
-  ];
-  const DAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const monthLabel = document.getElementById("cal-month-label");
+  const grid = document.getElementById("cal-grid");
+  if (!monthLabel || !grid) return;
 
-  document.getElementById("cal-month-label").textContent =
-    `${MONTHS[state.calendarMonth]} ${state.calendarYear}`;
-  document.getElementById("stat-streak").textContent = state.streak;
-  document.getElementById("sidebar-streak").textContent = state.streak;
-  document.getElementById("stat-total").textContent = state.studiedDays.length;
+  monthLabel.textContent = `${MONTHS[state.calendarMonth]} ${state.calendarYear}`;
+  const streak = document.getElementById("stat-streak");
+  const sidebarStreak = document.getElementById("sidebar-streak");
+  const total = document.getElementById("stat-total");
+  const monthHoursEl = document.getElementById("stat-hours");
+  const yearHoursEl = document.getElementById("stat-year-hours");
+  if (streak) streak.textContent = state.streak;
+  if (sidebarStreak) sidebarStreak.textContent = state.streak;
+  if (total) total.textContent = state.studiedDays.length;
 
   const ym = `${state.calendarYear}-${String(state.calendarMonth + 1).padStart(2, "0")}`;
-  const monthHours = Object.entries(state.studyLog)
+  const monthHours = Object.entries(state.studyLog || {})
     .filter(([day]) => day.startsWith(ym))
-    .reduce((acc, [, v]) => acc + v.hours, 0);
-  document.getElementById("stat-hours").textContent = monthHours + "h";
-  document.getElementById("stat-year-hours").textContent =
-    state.yearHours + "h";
+    .reduce((acc, [, v]) => acc + (Number(v?.hours) || 0), 0);
+  if (monthHoursEl) monthHoursEl.textContent = monthHours + "h";
+  if (yearHoursEl) yearHoursEl.textContent = state.yearHours + "h";
 
-  const grid = document.getElementById("cal-grid");
-  grid.innerHTML = "";
-
+  grid.replaceChildren();
   DAY_NAMES.forEach((name) => {
     const el = document.createElement("div");
     el.className = "cal-day-name";
@@ -135,19 +146,18 @@ export function renderCalendar() {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const todayKey = fmtDate(today);
   const firstDay = new Date(state.calendarYear, state.calendarMonth, 1);
   const lastDay = new Date(state.calendarYear, state.calendarMonth + 1, 0);
+  const studiedSet = new Set(state.studiedDays);
 
   for (let i = 0; i < firstDay.getDay(); i++) {
-    const prev = new Date(
-      state.calendarYear,
-      state.calendarMonth,
-      -firstDay.getDay() + i + 1,
-    );
-    const el = document.createElement("div");
-    el.className = "cal-day other-month";
-    el.textContent = prev.getDate();
-    grid.appendChild(el);
+    const prev = new Date(state.calendarYear, state.calendarMonth, i - firstDay.getDay() + 1);
+    const spacer = document.createElement("div");
+    spacer.className = "cal-day other-month";
+    spacer.textContent = prev.getDate();
+    spacer.setAttribute("aria-hidden", "true");
+    grid.appendChild(spacer);
   }
 
   const streakDays = new Set();
@@ -157,33 +167,49 @@ export function renderCalendar() {
     d.setDate(d.getDate() - 1);
   }
 
-  const studiedSet = new Set(state.studiedDays);
-
   for (let day = 1; day <= lastDay.getDate(); day++) {
     const date = new Date(state.calendarYear, state.calendarMonth, day);
     const key = fmtDate(date);
-    const isToday = date.getTime() === today.getTime();
+    const isToday = key === todayKey;
     const isStudied = studiedSet.has(key);
-    const isStreak = streakDays.has(key);
-
-    const el = document.createElement("div");
+    const isStreak = streakDays.has(key) && isStudied;
+    const isFuture = key > todayKey;
+    const el = document.createElement("button");
+    el.type = "button";
     el.className = "cal-day";
     if (isToday) el.classList.add("today");
-    if (isStreak && isStudied) el.classList.add("streak-day");
+    if (isStreak) el.classList.add("streak-day");
     else if (isStudied) el.classList.add("studied");
-
+    if (pendingDay === key) el.classList.add("saving");
+    el.disabled = isFuture || pendingDay !== null || changingMonth;
+    el.setAttribute("aria-pressed", String(isStudied));
+    el.setAttribute("aria-label", `${day} de ${MONTHS[state.calendarMonth]} de ${state.calendarYear}`
+      + (isStudied ? ", estudado; clique para desmarcar" : isFuture ? ", data futura" : ", clique para marcar"));
+    el.title = isFuture ? "Data futura: indisponível" : isStudied ? "Desmarcar dia" : "Marcar dia estudado";
     el.innerHTML = `${day}<span class="dot"></span>`;
-    el.setAttribute(
-      "aria-label",
-      `${day} de ${MONTHS[state.calendarMonth]}${isStudied ? " — estudado" : ""}`,
-    );
-    el.setAttribute("role", "button");
-    el.setAttribute("tabindex", "0");
-    el.onclick = () => toggleDay(key);
-    el.onkeydown = (e) => {
-      if (e.key === "Enter" || e.key === " ") toggleDay(key);
-    };
-
+    el.addEventListener("click", () => toggleDay(key));
     grid.appendChild(el);
   }
+
+  const action = document.getElementById("cal-today-btn");
+  const hint = document.getElementById("cal-today-hint");
+  if (action) {
+    const isMarked = studiedSet.has(todayKey);
+    action.disabled = pendingDay !== null || changingMonth;
+    action.classList.toggle("cal-action-done", isCurrentMonth() && isMarked);
+    action.textContent = changingMonth ? "Carregando…" : pendingDay !== null ? "Salvando…"
+      : !isCurrentMonth() ? "↩ Voltar ao mês atual"
+      : isMarked ? "✓ Hoje registrado — desmarcar" : "✅ Marcar hoje como estudado";
+    action.setAttribute("aria-pressed", String(isCurrentMonth() && isMarked));
+  }
+  if (hint) {
+    hint.textContent = changingMonth ? "Carregando calendário…"
+      : pendingDay !== null ? "Salvando seu registro…"
+      : !isCurrentMonth() ? "Volte ao mês atual para registrar hoje."
+      : studiedSet.has(todayKey) ? "Seu dia de hoje já está registrado."
+      : "Marque hoje após estudar; você pode desfazer se precisar.";
+  }
+  document.querySelectorAll("#calendar-panel .cal-arrow").forEach(b => {
+    b.disabled = changingMonth || pendingDay !== null;
+  });
 }
