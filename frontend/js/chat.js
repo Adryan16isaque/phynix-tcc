@@ -59,6 +59,87 @@ export async function sendMessage() {
   }
 }
 
+/* ── Fórmulas matemáticas nas respostas da IA ──────────────────
+ * O Markdown pode consumir os delimitadores LaTeX \[...\] e \(...\).
+ * Portanto, protegemos as fórmulas ANTES de chamar marked.parse().
+ * Depois da sanitização com DOMPurify, o KaTeX as renderiza.
+ * Código dentro de crases (inline ou bloco) continua sendo código.
+ * Essa função não altera o texto original salvo no histórico.
+ */
+function renderAiMarkdown(text) {
+  const expressions = [];
+  const mathPattern = /\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)|\$\$([\s\S]*?)\$\$|(?<!\\)\$(?!\s)([^\n$]*?\S)\$/g;
+
+  // Não interpretar fórmulas dentro de blocos de código Markdown.
+  const parts = String(text).split(/(```[\s\S]*?```|`[^`\n]+`)/g);
+  const protectedMarkdown = parts.map((part, index) => {
+    if (index % 2 === 1) return part;
+    return part.replace(mathPattern, (original, bracketBlock, parenInline, dollarBlock, dollarInline) => {
+      const latex = (bracketBlock ?? parenInline ?? dollarBlock ?? dollarInline).trim();
+      if (!latex) return original;
+      const display = bracketBlock !== undefined || dollarBlock !== undefined;
+      const token = `PHYNIXMATHTOKEN${expressions.length}END`;
+      expressions.push({ latex, display, original });
+      return token;
+    });
+  }).join("");
+
+  // Sanitizamos o Markdown fornecido pela IA antes de inserir fórmulas.
+  const container = document.createElement("div");
+  container.innerHTML = DOMPurify.sanitize(marked.parse(protectedMarkdown));
+  if (!expressions.length) return container.innerHTML;
+
+  // Os tokens aparecem somente em nós de texto, nunca no HTML gerado.
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+  for (const node of textNodes) {
+    const value = node.nodeValue;
+    const tokenPattern = /PHYNIXMATHTOKEN(\d+)END/g;
+    let match;
+    let start = 0;
+    let found = false;
+    const fragment = document.createDocumentFragment();
+
+    while ((match = tokenPattern.exec(value)) !== null) {
+      const entry = expressions[Number(match[1])];
+      if (!entry) continue;
+      found = true;
+      fragment.appendChild(document.createTextNode(value.slice(start, match.index)));
+
+      const holder = document.createElement("span");
+      holder.className = entry.display ? "phynix-math-block" : "phynix-math-inline";
+      if (window.katex && typeof window.katex.render === "function") {
+        try {
+          window.katex.render(entry.latex, holder, {
+            displayMode: entry.display,
+            throwOnError: false,
+            trust: false,
+            strict: "ignore",
+            maxExpand: 500,
+          });
+        } catch (error) {
+          // Fórmula inválida: mostre o original em texto, sem quebrar o chat.
+          holder.textContent = entry.original;
+        }
+      } else {
+        // Falha ao carregar o CDN: mantenha o conteúdo visível.
+        holder.textContent = entry.original;
+      }
+      fragment.appendChild(holder);
+      start = match.index + match[0].length;
+    }
+
+    if (found) {
+      fragment.appendChild(document.createTextNode(value.slice(start)));
+      node.parentNode.replaceChild(fragment, node);
+    }
+  }
+
+  return container.innerHTML;
+}
+
 /** Monta uma bolha de mensagem no chat.
  *  Mensagens da IA passam pelo `marked` (Markdown → HTML) e depois
  *  pelo `DOMPurify` (sanitiza o HTML resultante, removendo qualquer
@@ -80,7 +161,7 @@ function appendMsg(role, text, msgId = null) {
 
   const bodyHtml =
     normRole === "ai"
-      ? DOMPurify.sanitize(marked.parse(text))
+      ? renderAiMarkdown(text)
       : escapeHtml(text).replace(/\n/g, "<br>");
 
   div.innerHTML = `

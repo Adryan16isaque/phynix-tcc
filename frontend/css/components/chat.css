@@ -386,3 +386,32 @@
   opacity: 0.85;
 }
 .msg-bubble-content a { color: var(--accent); text-decoration: underline; }
+
+/* ── Renderização matemática: KaTeX nas respostas do EstudaAI ── */
+.msg.ai .msg-bubble-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.msg.ai .msg-bubble-content .phynix-math-block {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 12px 0;
+  padding: 6px 0;
+  text-align: center;
+}
+.msg.ai .msg-bubble-content .phynix-math-inline {
+  display: inline;
+}
+.msg.ai .msg-bubble-content .katex-display {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.msg.ai .msg-bubble-content .katex {
+  color: var(--text);
+  font-size: 1.08em;
+}
