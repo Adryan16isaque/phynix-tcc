@@ -254,7 +254,7 @@ import {
 } from "./planner.js";
 import { markToday, changeMonth, renderCalendar } from "./calendar.js";
 import { renderAchievements } from "./achievements.js";
-import { saveGoal, confirmDeleteAccount, renderProfile } from "./profile.js";
+import { confirmDeleteAccount, renderProfile } from "./profile.js?v=sem-meta-1";
 
 Object.assign(window, {
   // Autenticação
@@ -284,7 +284,6 @@ Object.assign(window, {
   markToday,
   changeMonth,
   // Perfil
-  saveGoal,
   confirmDeleteAccount,
 });
 

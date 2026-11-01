@@ -49,15 +49,6 @@
   font-weight: 600;
 }
 
-.goal-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-.goal-row .inp {
-  max-width: 100px;
-}
-
 /* .stats-row (calendar.css) tem margin-bottom próprio; aqui o
    espaçamento vem do gap do painel */
 #profile-panel .stats-row {

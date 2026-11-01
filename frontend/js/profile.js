@@ -1,8 +1,6 @@
-
 /* ═══════════════════════════════════════════════════════════
-   PROFILE.JS — Aba de Perfil: informações da conta,
-   estatísticas e opção de apagar a conta.
-   A antiga meta diária foi removida do projeto.
+   PROFILE.JS — Aba de Perfil: dados da conta, estatísticas
+   e opção de apagar a conta.
    ═══════════════════════════════════════════════════════════ */
 
 import { state, api, escapeHtml } from "./app.js";
@@ -10,24 +8,21 @@ import { handleLogout } from "./auth.js";
 
 function fmtDate(value) {
   if (!value) return "—";
-
   const d = new Date(String(value).replace(" ", "T"));
-  if (isNaN(d.getTime())) return "—";
-
+  if (isNaN(d)) return "—";
   return d.toLocaleDateString("pt-BR");
 }
 
 export async function renderProfile() {
   const panel = document.getElementById("profile-panel");
-  if (!panel) return;
 
-  // O endpoint de autenticação fornece a data de criação da conta.
-  // Se falhar, mostramos os dados já disponíveis na sessão.
+  // login.php/register.php não devolvem `created_at`, só o /auth/me.php.
+  // Sem essa busca, "Conta criada em" ficaria "—" logo após entrar.
   try {
     const { user: fresh } = await api("/auth/me.php");
     if (fresh) state.user = fresh;
   } catch (err) {
-    // Não impede a renderização do perfil.
+    // sem problema: mostra o que já tem em memória
   }
 
   const unlockedCount = state.achievements.filter((a) => a.unlocked).length;
@@ -90,16 +85,9 @@ export async function renderProfile() {
   `;
 }
 
-// Compatibilidade temporária: caso app.js ainda importe saveGoal,
-// esta exportação evita quebrar o carregamento dos módulos.
-// Não há campo, botão ou chamada à API de configurações no perfil.
-export function saveGoal() {
-  // A meta diária foi descontinuada.
-}
-
 export async function confirmDeleteAccount() {
   const sure = confirm(
-    "Tem certeza que quer apagar sua conta? Essa ação NÃO pode ser desfeita."
+    "Tem certeza que quer apagar sua conta? Essa ação NÃO pode ser desfeita.",
   );
   if (!sure) return;
 
@@ -111,7 +99,6 @@ export async function confirmDeleteAccount() {
       method: "DELETE",
       body: JSON.stringify({ password }),
     });
-
     alert("Conta apagada. Sentiremos sua falta!");
     await handleLogout();
   } catch (err) {
