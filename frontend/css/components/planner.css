@@ -223,7 +223,7 @@ tr:hover td {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 18px;
-  align-items: end;
+  align-items: start;
 }
 .planner-field { display: flex; flex-direction: column; min-width: 0; gap: 7px; }
 .planner-field > label { color: var(--text); font-size: 13px; font-weight: 700; }
@@ -247,17 +247,26 @@ tr:hover td {
 .planner-color-control input[type="color"]::-moz-color-swatch { border-radius: 6px; border: 0; }
 .planner-color-label { color: var(--text-dim); font-size: 13px; cursor: pointer; }
 .planner-color-control:focus-within { border-color: var(--accent); }
-.planner-field-submit { grid-column: 3; }
+.planner-field-submit {
+  grid-column: 3;
+  align-self: start;
+  /* Compensa a altura do rótulo da cor + o espaçamento do campo. */
+  padding-top: 22px;
+}
 .planner-add-button { min-height: 44px; width: 100%; white-space: nowrap; }
 .planner-add-button:disabled { opacity: .65; cursor: wait; transform: none; }
 @media (max-width: 1050px) {
   .planner-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .planner-field-name, .planner-field-color { grid-column: 1 / -1; }
-  .planner-field-submit { grid-column: 1 / -1; }
+  .planner-field-name { grid-column: 1 / -1; }
+  /* Cor e botão na mesma linha também em tablets. */
+  .planner-field-color { grid-column: 1; }
+  .planner-field-submit { grid-column: 2; }
   .planner-field > small { min-height: 0; }
 }
 @media (max-width: 520px) {
   .planner-form-grid { grid-template-columns: minmax(0,1fr); gap: 14px; padding: 14px; }
   .planner-field-name, .planner-field-color, .planner-field-submit { grid-column: 1; }
+  /* No celular: botão de largura total imediatamente abaixo da cor. */
+  .planner-field-submit { padding-top: 0; }
   .planner-field > small { font-size: 11px; }
 }
