@@ -1,6 +1,8 @@
+
 /* ═══════════════════════════════════════════════════════════
-   PROFILE.JS — Aba de Perfil: dados da conta, meta diária de
-   estudo e opção de apagar a conta.
+   PROFILE.JS — Aba de Perfil: informações da conta,
+   estatísticas e opção de apagar a conta.
+   A antiga meta diária foi removida do projeto.
    ═══════════════════════════════════════════════════════════ */
 
 import { state, api, escapeHtml } from "./app.js";
@@ -8,21 +10,24 @@ import { handleLogout } from "./auth.js";
 
 function fmtDate(value) {
   if (!value) return "—";
+
   const d = new Date(String(value).replace(" ", "T"));
-  if (isNaN(d)) return "—";
+  if (isNaN(d.getTime())) return "—";
+
   return d.toLocaleDateString("pt-BR");
 }
 
 export async function renderProfile() {
   const panel = document.getElementById("profile-panel");
+  if (!panel) return;
 
-  // login.php/register.php não devolvem `created_at`, só o /auth/me.php.
-  // Sem essa busca, "Conta criada em" ficaria "—" logo após entrar.
+  // O endpoint de autenticação fornece a data de criação da conta.
+  // Se falhar, mostramos os dados já disponíveis na sessão.
   try {
     const { user: fresh } = await api("/auth/me.php");
     if (fresh) state.user = fresh;
   } catch (err) {
-    // sem problema: mostra o que já tem em memória
+    // Não impede a renderização do perfil.
   }
 
   const unlockedCount = state.achievements.filter((a) => a.unlocked).length;
@@ -39,15 +44,6 @@ export async function renderProfile() {
       <div class="profile-field">
         <span>Conta criada em</span><strong>${fmtDate(user.created_at)}</strong>
       </div>
-    </div>
-
-    <div class="profile-card">
-      <label class="auth-label" for="goal-input">Meta diária de estudo (horas)</label>
-      <div class="goal-row">
-        <input class="inp" type="number" id="goal-input" min="1" max="24" value="4">
-        <button class="btn btn-primary" onclick="saveGoal()">Salvar</button>
-      </div>
-      <div id="goal-feedback" class="auth-hint"></div>
     </div>
 
     <div class="stats-row">
@@ -92,36 +88,18 @@ export async function renderProfile() {
       </button>
     </div>
   `;
-
-  try {
-    const { goal } = await api("/settings.php");
-    document.getElementById("goal-input").value = goal;
-  } catch (err) {
-    // Se não conseguir carregar, mantém o padrão (4h) já preenchido.
-  }
 }
 
-export async function saveGoal() {
-  const input = document.getElementById("goal-input");
-  const feedback = document.getElementById("goal-feedback");
-  const goal = parseInt(input.value, 10);
-
-  try {
-    await api("/settings.php", {
-      method: "POST",
-      body: JSON.stringify({ goal }),
-    });
-    feedback.textContent = "Meta salva!";
-    feedback.style.color = "var(--accent3)";
-  } catch (err) {
-    feedback.textContent = err.message;
-    feedback.style.color = "var(--danger)";
-  }
+// Compatibilidade temporária: caso app.js ainda importe saveGoal,
+// esta exportação evita quebrar o carregamento dos módulos.
+// Não há campo, botão ou chamada à API de configurações no perfil.
+export function saveGoal() {
+  // A meta diária foi descontinuada.
 }
 
 export async function confirmDeleteAccount() {
   const sure = confirm(
-    "Tem certeza que quer apagar sua conta? Essa ação NÃO pode ser desfeita.",
+    "Tem certeza que quer apagar sua conta? Essa ação NÃO pode ser desfeita."
   );
   if (!sure) return;
 
@@ -133,6 +111,7 @@ export async function confirmDeleteAccount() {
       method: "DELETE",
       body: JSON.stringify({ password }),
     });
+
     alert("Conta apagada. Sentiremos sua falta!");
     await handleLogout();
   } catch (err) {
