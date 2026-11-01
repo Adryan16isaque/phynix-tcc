@@ -1,0 +1,180 @@
+/* ══════════════════════════════════════════════════════════════════════
+   PHYNIX — MOBILE RESPONSIVE (v1)
+   Correção das 6 abas no celular + layout de chat, planner e calendário.
+
+   Carregar DEPOIS de main.css e dos CSS de componentes para que as
+   regras móveis substituam apenas o necessário. Nenhum JS ou PHP muda.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* A sidebar desaparece no mobile; a barra superior é a navegação. */
+  #sidebar { display: none; }
+  #app { width: 100%; min-width: 0; height: 100dvh; }
+  #main { width: 100%; min-width: 0; min-height: 0; }
+  #main > .panel { min-width: 0; min-height: 0; }
+  #main > .panel.active { min-height: 0; }
+
+  /* Seis abas visíveis sem rolagem horizontal: 3 colunas x 2 linhas. */
+  #tab-bar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding: 8px 8px 7px;
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+  #tab-bar .tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 2px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    margin: 0;
+    font-size: clamp(11px, 2.9vw, 13px);
+    line-height: 1.2;
+    white-space: nowrap;
+    text-align: center;
+  }
+  #tab-bar .tab.active {
+    background: var(--surface);
+    border-color: var(--border);
+    margin-bottom: 0;
+  }
+
+  /* Chat: não permitir que uma fórmula ou tabela estoure a tela. */
+  #chat-header { padding: 11px 12px; gap: 9px; }
+  #chat-header .ai-info { flex: 1; min-width: 0; }
+  #chat-header .ai-info h3 { font-size: 14px; line-height: 1.25; }
+  #chat-header .ai-status { font-size: 10px; }
+  #chat-header > .btn {
+    flex: 0 0 auto;
+    max-width: 116px;
+    min-height: 40px;
+    white-space: normal;
+    line-height: 1.25;
+  }
+  #messages { min-width: 0; min-height: 0; padding: 12px 8px; gap: 12px; }
+  #messages .msg { min-width: 0; max-width: 100%; gap: 7px; }
+  #messages .msg.ai { align-self: stretch; }
+  #messages .msg.user { max-width: 94%; }
+  #messages .msg-avatar { width: 28px; height: 28px; flex: 0 0 28px; }
+  #messages .msg-bubble {
+    min-width: 0;
+    max-width: 100%;
+    padding: 11px 12px;
+    overflow-wrap: anywhere;
+    font-size: 13.5px;
+  }
+  #messages .msg.ai .msg-bubble { flex: 1; }
+  #messages .msg-bubble-content { min-width: 0; max-width: 100%; }
+  #messages .msg-bubble-content table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  #messages .msg-bubble-content th,
+  #messages .msg-bubble-content td {
+    padding: 9px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  #messages .msg-bubble-content .katex-display,
+  #messages .msg-bubble-content .phynix-math-block {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Atalhos em uma linha rolável, liberando espaço para a conversa. */
+  #quick-prompts {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 9px 10px;
+  }
+  #quick-prompts .qp { flex: 0 0 auto; }
+  #input-area { padding: 9px 10px; gap: 9px; }
+  #user-input { min-width: 0; flex: 1 1 auto; font-size: 16px; }
+  #send-btn { width: 44px; height: 44px; }
+
+  /* Formulário: cada entrada recebe largura suficiente para digitar. */
+  #planner-panel, #calendar-panel, #achievements-panel,
+  #history-panel, #profile-panel { padding: 14px; }
+  #planner-panel > div { width: 100%; min-width: 0; }
+  #planner-panel .add-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+  #planner-panel .add-row #inp-subject {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+  }
+  #planner-panel .add-row #inp-hours,
+  #planner-panel .add-row #inp-days { width: 100%; min-width: 0; }
+  #planner-panel .add-row input[type="color"] {
+    width: 100% !important;
+    min-height: 44px;
+  }
+  #planner-panel .add-row .btn { min-height: 44px; }
+  #planner-panel .table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #planner-panel #planner-table { min-width: 580px; }
+
+  /* Cartões do calendário em duas colunas (não quatro espremidas). */
+  #calendar-panel .stats-row,
+  #profile-panel .stats-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  #calendar-panel .stat-card,
+  #profile-panel .stat-card { min-width: 0; padding: 14px; }
+  #calendar-panel .cal-header {
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  #calendar-panel .cal-nav { margin-left: auto; gap: 6px; }
+  #calendar-panel .cal-month { min-width: 0; font-size: 15px; }
+  #calendar-panel .cal-grid { padding: 8px; gap: 2px; }
+  #calendar-panel .cal-day { min-width: 0; font-size: 12px; }
+  #calendar-panel .cal-legend { gap: 10px; font-size: 11px; }
+
+  /* Histórico / conquistas ocupam a largura de tela no mobile. */
+  #history-panel .ach-grid,
+  #achievements-panel .ach-grid { grid-template-columns: minmax(0, 1fr); }
+  #profile-panel .profile-field { gap: 12px; align-items: flex-start; }
+  #profile-panel .profile-field strong { text-align: right; overflow-wrap: anywhere; }
+  #profile-panel .profile-logout-mobile { display: flex; }
+
+  /* Toast não pode ficar fora da largura útil do telefone. */
+  #toast { left: 12px; right: 12px; max-width: none; bottom: 12px; }
+}
+
+/* Em tablets no modo retrato, as seis abas cabem em uma linha. */
+@media (min-width: 521px) and (max-width: 768px) {
+  #tab-bar { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  #tab-bar .tab { font-size: 12px; }
+}
+
+/* Telas muito estreitas: ajuste fino do cabeçalho. */
+@media (max-width: 360px) {
+  #tab-bar { padding-inline: 4px; gap: 3px; }
+  #tab-bar .tab { font-size: 11px; padding-inline: 0; }
+  #chat-header { padding: 9px; gap: 6px; }
+  #chat-header > .btn { max-width: 96px; }
+  #calendar-panel .cal-month { font-size: 13px; }
+}
