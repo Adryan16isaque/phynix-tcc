@@ -254,7 +254,7 @@ import {
 } from "./planner.js";
 import { markToday, changeMonth, renderCalendar } from "./calendar.js";
 import { renderAchievements } from "./achievements.js";
-import { confirmDeleteAccount, renderProfile } from "./profile.js?v=sem-meta-1";
+import { confirmDeleteAccount, renderProfile } from "./profile.js?v=editar-nome-1";
 
 Object.assign(window, {
   // Autenticação

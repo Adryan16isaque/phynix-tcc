@@ -90,3 +90,63 @@
     display: flex;
   }
 }
+
+
+/* ════════════════════════════════════════════════════════
+   EDIÇÃO DE NOME — visual PHYNIX, responsivo
+   ════════════════════════════════════════════════════════ */
+.profile-account-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+.profile-account-title { color: var(--text); font-size: 16px; }
+.profile-account-hint { color: var(--text-dim); font-size: 12px; margin: 4px 0 0; }
+.profile-edit-trigger {
+  flex-shrink: 0;
+  background: rgba(79, 138, 255, .08);
+  border: 1px solid var(--accent);
+  color: var(--text);
+}
+.profile-edit-trigger:hover, .profile-edit-trigger:focus-visible {
+  background: rgba(79, 138, 255, .18);
+}
+.profile-edit-trigger[hidden] { display: none; }
+.profile-account .profile-field strong {
+  text-align: right;
+  max-width: 75%;
+  overflow-wrap: anywhere;
+}
+.profile-edit-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.profile-edit-form[hidden],
+.profile-edit-status[hidden],
+.profile-input-error[hidden] { display: none; }
+.profile-edit-form label {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.profile-name-input { width: 100%; box-sizing: border-box; }
+.profile-name-input[aria-invalid="true"] { border-color: var(--danger); }
+.profile-input-help { color: var(--text-dim); font-size: 12px; }
+.profile-input-error { color: var(--danger); font-size: 12px; }
+.profile-edit-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.profile-cancel-btn { border: 1px solid var(--border); background: var(--surface2); color: var(--text); }
+.profile-edit-actions button:disabled { opacity: .6; cursor: wait; }
+.profile-edit-status { color: var(--accent3); font-size: 13px; margin-top: 12px; }
+@media (max-width: 640px) {
+  .profile-account-header { align-items: stretch; flex-direction: column; }
+  .profile-edit-trigger { align-self: flex-start; }
+  .profile-edit-actions button { flex: 1; min-width: 120px; }
+  .profile-account .profile-field { gap: 10px; }
+}
