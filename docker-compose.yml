@@ -11,6 +11,7 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASS}"]
       interval: 5s
       retries: 20
+
   app:
     build: .
     restart: unless-stopped
@@ -22,11 +23,17 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: root
       DB_PASS: ${DB_PASS}
-      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_API_KEYS: ${GROQ_API_KEYS:-}
+      GROQ_ROTATION_STATE: /var/lib/phynix-ai/round-robin.state
       GROQ_MODEL: ${GROQ_MODEL}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       APP_ENV: ${APP_ENV}
     ports:
       - "127.0.0.1:8080:80"
+    volumes:
+      - groqstate:/var/lib/phynix-ai
+
 volumes:
   dbdata:
+  groqstate:
