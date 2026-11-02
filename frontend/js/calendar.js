@@ -6,6 +6,7 @@
 
 import { api, state, showToast } from "./app.js";
 import { handleUnlocked } from "./achievements.js";
+import { refreshStudyHours, paintStudyHours } from "./study-hours.js";
 
 const MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -27,7 +28,13 @@ export async function loadCalendar() {
   state.studyLog = data.studyLog && typeof data.studyLog === "object" ? data.studyLog : {};
   state.firesByDay = data.firesByDay && typeof data.firesByDay === "object" ? data.firesByDay : {};
   state.streak = Number(data.stats?.streak) || 0;
-  state.yearHours = Number(data.stats?.yearHours) || 0;
+  // A API antiga fornece estatísticas do calendário. Horas vêm de
+  // hours_log em /hours-summary.php, evitando totais divergentes.
+  try {
+    await refreshStudyHours();
+  } catch (err) {
+    console.warn("Não foi possível carregar os totais de horas.", err);
+  }
 }
 
 function applyDayToggle(key, marked, streak) {
@@ -123,18 +130,18 @@ export function renderCalendar() {
   const streak = document.getElementById("stat-streak");
   const sidebarStreak = document.getElementById("sidebar-streak");
   const total = document.getElementById("stat-total");
-  const monthHoursEl = document.getElementById("stat-hours");
-  const yearHoursEl = document.getElementById("stat-year-hours");
   if (streak) streak.textContent = state.streak;
   if (sidebarStreak) sidebarStreak.textContent = state.streak;
   if (total) total.textContent = state.studiedDays.length;
 
-  const ym = `${state.calendarYear}-${String(state.calendarMonth + 1).padStart(2, "0")}`;
-  const monthHours = Object.entries(state.studyLog || {})
-    .filter(([day]) => day.startsWith(ym))
-    .reduce((acc, [, v]) => acc + (Number(v?.hours) || 0), 0);
-  if (monthHoursEl) monthHoursEl.textContent = monthHours + "h";
-  if (yearHoursEl) yearHoursEl.textContent = state.yearHours + "h";
+  // Ambos os cartões utilizam a mesma agregação que o Perfil/Planner.
+  // Sem dados válidos, exibem "—", não um zero incorreto.
+  paintStudyHours();
+  // A navegação pode exibir um mês diferente do mês atual.
+  const monthStatLabel = document.getElementById("stat-hours")?.nextElementSibling;
+  if (monthStatLabel?.classList.contains("stat-lbl")) {
+    monthStatLabel.textContent = "Horas do mês exibido";
+  }
 
   grid.replaceChildren();
   DAY_NAMES.forEach((name) => {

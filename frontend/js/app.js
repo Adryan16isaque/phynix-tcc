@@ -36,7 +36,11 @@ export const state = {
   achievements: [], // lista completa vinda do servidor, com .unlocked
   achievementsError: null, // mensagem de erro, se a última tentativa de carregar falhou
   streak: 0,
-  yearHours: 0,
+  yearHours: 0, // total de hours_log no ano corrente
+  monthHours: 0, // total de hours_log no mês selecionado
+  hoursMonthYm: null,
+  hoursSummaryLoaded: false,
+  hoursSummaryFailed: false,
   chatSessionId: null,
   historySessions: [],
   historyOffset: 0,
@@ -60,6 +64,10 @@ export function resetState() {
   state.achievementsError = null;
   state.streak = 0;
   state.yearHours = 0;
+  state.monthHours = 0;
+  state.hoursMonthYm = null;
+  state.hoursSummaryLoaded = false;
+  state.hoursSummaryFailed = false;
   state.chatSessionId = null;
   state.historySessions = [];
   state.historyOffset = 0;

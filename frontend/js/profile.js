@@ -6,6 +6,7 @@
 
 import { state, api, escapeHtml } from "./app.js";
 import { handleLogout } from "./auth.js";
+import { refreshStudyHours, paintStudyHours } from "./study-hours.js";
 
 function fmtDate(value) {
   if (!value) return "—";
@@ -41,14 +42,22 @@ export async function renderProfile() {
   const panel = document.getElementById("profile-panel");
   if (!panel) return;
 
-  // A rota /auth/me.php inclui a data de criação da conta.
-  try {
-    const { user } = await api("/auth/me.php");
-    if (user) state.user = { ...(state.user || {}), ...user };
-  } catch (err) {
-    // Erro temporário: ainda podemos mostrar o usuário em memória.
-    console.warn("Não foi possível atualizar os dados do perfil.", err);
+  const profileUserId = state.user?.id == null ? null : String(state.user.id);
+  // O perfil sempre lê o resumo atual do banco, independentemente do mês
+  // selecionado no calendário. Mantém as outras informações mesmo se falhar.
+  const [userResult, hoursResult] = await Promise.allSettled([
+    api("/auth/me.php"), refreshStudyHours(),
+  ]);
+  if (userResult.status === "fulfilled" && userResult.value.user) {
+    state.user = { ...(state.user || {}), ...userResult.value.user };
+  } else if (userResult.status === "rejected") {
+    console.warn("Não foi possível atualizar os dados do perfil.", userResult.reason);
   }
+  if (hoursResult.status === "rejected") {
+    console.warn("Não foi possível atualizar as horas do perfil.", hoursResult.reason);
+  }
+  // Se saiu da conta durante o carregamento, não recriar dados após logout.
+  if ((state.user?.id == null ? null : String(state.user.id)) !== profileUserId) return;
 
   const user = state.user || {};
   const unlockedCount = state.achievements.filter((item) => item.unlocked).length;
@@ -145,7 +154,7 @@ export async function renderProfile() {
       </div>
       <div class="stat-card">
         <div class="stat-ico">⏱</div>
-        <div class="stat-val">${state.yearHours}h</div>
+        <div class="stat-val" id="profile-year-hours">${state.hoursSummaryLoaded && !state.hoursSummaryFailed ? state.yearHours.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "h" : "—"}</div>
         <div class="stat-lbl">estudadas este ano</div>
       </div>
     </div>
@@ -167,6 +176,8 @@ export async function renderProfile() {
       </button>
     </div>
   `;
+
+  paintStudyHours();
 
   const editBtn = panel.querySelector("#profile-edit-name-btn");
   const cancelBtn = panel.querySelector("#profile-cancel-name-btn");

@@ -5,6 +5,19 @@
 import { api, state, escapeHtml, showToast } from "./app.js";
 import { handleUnlocked } from "./achievements.js";
 import { renderCalendar, fmtDate } from "./calendar.js";
+import { refreshStudyHours } from "./study-hours.js";
+
+// Não deixa o salvamento de horas de uma mesma matéria chegar fora de ordem.
+const pendingHoursBySubject = new Set();
+async function syncHourTotalsAfterChange() {
+  try {
+    await refreshStudyHours();
+  } catch (err) {
+    console.warn("Dados salvos, mas não foi possível atualizar o resumo de horas.", err);
+    showToast("⚠️", "Registro salvo", "Atualize a página para conferir as estatísticas de horas.");
+  }
+  renderCalendar();
+}
 
 export async function loadSubjects() {
   const { subjects } = await api("/subjects.php");
@@ -91,13 +104,16 @@ export async function removeSubject(id) {
     await api(`/subjects.php?id=${id}`, { method: "DELETE" });
     state.subjects = state.subjects.filter((s) => s.id !== id);
     renderPlanner();
+    await syncHourTotalsAfterChange(); // cascade de hours_log após apagar matéria
   } catch (err) {
     showToast("⚠️", "Erro ao remover", err.message);
   }
 }
 
 export async function updateDone(id, val) {
+  if (pendingHoursBySubject.has(id)) return;
   const monthHours = Math.max(0, parseFloat(val) || 0);
+  pendingHoursBySubject.add(id);
   try {
     const data = await api("/subjects.php", {
       method: "PUT",
@@ -111,9 +127,12 @@ export async function updateDone(id, val) {
     }
     renderPlanner();
     handleUnlocked(data.unlocked);
+    await syncHourTotalsAfterChange();
   } catch (err) {
     showToast("⚠️", "Erro ao atualizar horas", err.message);
     renderPlanner();
+  } finally {
+    pendingHoursBySubject.delete(id);
   }
 }
 
