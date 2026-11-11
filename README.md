@@ -1,210 +1,328 @@
-# Phynix / EstudaAI
+# PHYNIX · EstudaAI
 
-App de estudos com chat de IA, planner de matérias, calendário de
-streaks e conquistas — front-end estático (HTML/CSS/JS, módulos ES) +
-back-end em PHP puro com MySQL.
+Plataforma web de estudos com um assistente de IA voltada a estudantes brasileiros do Ensino Médio, do ENEM e de vestibulares. Projeto de Conclusão de Curso (TCC) do CEMI-DF.
 
-**Rodando em produção:** https://phynix-tcc-production.up.railway.app/
-(Railway — veja a seção [Deploy em produção](#deploy-em-produção-railway))
+| | |
+|---|---|
+| **Equipe** | Adryan, Asafe, Enzo, Lívia e Riquelme |
+| **Front-end** | HTML, CSS e JavaScript (módulos ES), sem framework |
+| **Back-end** | PHP 8.2 puro (PDO), sem framework |
+| **Banco de dados** | MySQL 8.4 |
+| **IA** | API da Groq (a chave fica só no servidor) |
+| **Infraestrutura** | Docker Compose (Apache + PHP e MySQL) |
 
-```
-phynix-tcc-main/
-├── index.php                 ← redireciona "/" para "/frontend/"
-├── Dockerfile                ← usado só no deploy (Railway)
-├── frontend/                 ← abra frontend/index.html no navegador
-│   ├── index.html
-│   ├── accessibility.js
-│   ├── assets/fenix.png
+---
 
+## Sumário
 
-│   ├── css/
-│   │   ├── main.css
-│   │   ├── accessibility.css
-│   │   └── components/       (chat.css, etc.)
-│   └── js/                   ← módulos ES
-│       ├── main.js
-│       ├── auth.js
-│       ├── state.js
-│       ├── api.js
-│       ├── planner.js
-│       ├── calendar.js
-│       ├── achievements.js
-│       ├── chat.js
-│       ├── tabs.js
-│       └── ui.js
-└── backend/                  ← roda no PHP/XAMPP
-    ├── .env                  (crie a partir do .env.example — NÃO versionar)
-    ├── .env.example
-    ├── config/
-    │   ├── config.php        (lê os valores do .env — não editar direto)
-    │   ├── database.php
-    │   └── env.php
-    ├── includes/
-    │   ├── bootstrap.php
-    │   ├── response.php
-    │   ├── stats.php
-    │   └── achievements.php
-    ├── api/
-    │   ├── subjects.php
-    │   ├── calendar.php
-    │   ├── complete.php
-    │   ├── chat.php
-    │   ├── achievements.php
-    │   ├── settings.php      ⚠️ ainda NÃO implementado (ver Pendências)
-    │   └── auth/
-    │       ├── login.php
-    │       ├── register.php
-    │       ├── logout.php
-    │       └── me.php
-    └── schema.sql
+1. [Teste rápido para avaliadores](#1-teste-rápido-para-avaliadores)
+2. [Rodar localmente com Docker (recomendado)](#2-rodar-localmente-com-docker-recomendado)
+3. [Rodar sem Docker (alternativa)](#3-rodar-sem-docker-alternativa)
+4. [Publicar em um servidor](#4-publicar-em-um-servidor)
+5. [Variáveis de ambiente](#5-variáveis-de-ambiente)
+6. [Estrutura do projeto](#6-estrutura-do-projeto)
+7. [Banco de dados](#7-banco-de-dados)
+8. [Manutenção: atualizar, backup e restauração](#8-manutenção-atualizar-backup-e-restauração)
+9. [Problemas comuns](#9-problemas-comuns)
+10. [Segurança e LGPD](#10-segurança-e-lgpd)
+
+---
+
+## 1. Teste rápido para avaliadores
+
+Você precisa de **Git** e **Docker** (Docker Desktop no Windows/macOS ou Docker Engine no Linux). Em cinco comandos o site sobe em `http://localhost:8080`:
+
+```bash
+git clone https://github.com/Adryan16isaque/phynix-tcc.git
+cd phynix-tcc
+cp .env.example .env                 # depois edite o .env (veja a seção 5)
+docker compose up -d --build
+docker compose exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' < backend/schema.sql
 ```
 
----
+Abra **http://localhost:8080**, crie uma conta e use o site.
 
-## ⚠️ Segurança — leia antes de tudo
-
-1. **Segredos ficam só no `.env`.** `backend/.env` está no
-   `.gitignore` e nunca deve ser commitado. Use `backend/.env.example`
-   como modelo (sem valores reais) para saber quais variáveis
-   preencher: `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`,
-   `GROQ_API_KEY`, `GROQ_MODEL`, `ALLOWED_ORIGINS`, `APP_ENV`.
-2. A chave da **Groq** só existe no back-end (`backend/.env` →
-   `config.php`) e nunca é enviada ao navegador — o chat sempre passa
-   por `/api/chat.php`.
-3. **Se você usou a senha do banco ou a chave da Groq em algum print,
-   chat ou log colado em algum lugar público, gere valores novos.**
-   Credenciais que já apareceram em texto (mesmo que "só" numa
-   conversa ou issue) devem ser tratadas como comprometidas.
+> **Chave da IA:** sem `GROQ_API_KEY` o site funciona normalmente, mas o chat do EstudaAI responderá com erro. Para testar o chat, gere uma chave gratuita em <https://console.groq.com/keys> e coloque no `.env`.
 
 ---
 
-## Rodando localmente (XAMPP/Laragon)
+## 2. Rodar localmente com Docker (recomendado)
 
-Use esta seção pra desenvolver, testar mudanças antes de subir pro ar,
-ou se o deploy em produção estiver fora do ar e você precisar voltar
-a rodar tudo na sua máquina.
+### 2.1 Requisitos
 
-### 1. Requisitos
+- Git
+- Docker 24+ com o plugin **Docker Compose v2** (`docker compose version` deve funcionar)
+- Porta **8080** livre no computador
+- Internet (para baixar as imagens e para o chat falar com a Groq)
 
-- **XAMPP** ou **Laragon** (PHP 8.0+ com `pdo_mysql`, `curl` e
-  `mbstring` — as três já vêm ativadas por padrão em ambos — e
-  MySQL/MariaDB)
-- Uma chave de API da **Groq** (grátis em https://console.groq.com) —
-  necessária para o chat funcionar
+### 2.2 Passo a passo
 
-### 2. Instalação
+**1. Clonar o repositório**
 
-1. Copie a pasta do projeto inteira para dentro de `htdocs`
-   (ex.: `C:\xampp\htdocs\phynix-tcc-main` no Windows).
-2. Abra o **XAMPP Control Panel** e inicie **Apache** e **MySQL**.
-3. Crie o banco de dados: abra o **phpMyAdmin**
-   (`http://localhost/phpmyadmin`), vá em "Importar" e envie o
-   arquivo `backend/schema.sql` — ele cria o banco `phynix` e todas
-   as tabelas automaticamente (já com o isolamento de dados por
-   usuário corrigido nas foreign keys).
-4. Copie `backend/.env.example` para `backend/.env` e preencha:
+```bash
+git clone https://github.com/Adryan16isaque/phynix-tcc.git
+cd phynix-tcc
+```
 
+**2. Criar o arquivo `.env` na raiz do projeto** (mesma pasta do `docker-compose.yml`)
+
+```bash
+cp .env.example .env
+```
+
+No Windows (PowerShell): `Copy-Item .env.example .env`
+
+Edite o `.env`. Para uso local, estes valores bastam:
+
+```env
+DB_NAME=phynix
+DB_PASS=uma-senha-qualquer
+GROQ_API_KEY=cole-sua-chave-da-groq-aqui
+GROQ_MODEL=openai/gpt-oss-120b
+ALLOWED_ORIGINS=http://localhost:8080
+APP_ENV=development
+```
+
+Use `APP_ENV=development` porque o acesso local é por `http`, sem HTTPS. O `.env` **nunca** deve ser enviado ao GitHub (já está no `.gitignore`).
+
+**3. Subir os containers**
+
+```bash
+docker compose up -d --build
+```
+
+O Compose cria dois serviços:
+
+- `db`: MySQL 8.4, com volume `dbdata` (os dados sobrevivem a reinícios) e *healthcheck*. Não expõe porta para fora.
+- `app`: Apache + PHP 8.2, só sobe depois que o banco estiver saudável. Publicado em `127.0.0.1:8080`.
+
+Confira se os dois estão `running`/`healthy`:
+
+```bash
+docker compose ps
+```
+
+**4. Criar as tabelas (somente na primeira vez)**
+
+Linux, macOS e Git Bash:
+
+```bash
+docker compose exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' < backend/schema.sql
+```
+
+Windows PowerShell (o operador `<` não funciona lá):
+
+```powershell
+Get-Content backend/schema.sql | docker compose exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'
+```
+
+Confira:
+
+```bash
+docker compose exec db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" -e "SHOW TABLES;"'
+```
+
+Devem aparecer **9 tabelas**.
+
+**5. Acessar**
+
+Abra **http://localhost:8080** e crie uma conta pela tela de cadastro.
+
+### 2.3 Comandos do dia a dia
+
+```bash
+docker compose logs -f app      # logs do PHP/Apache
+docker compose logs -f db       # logs do MySQL
+docker compose restart app      # reinicia só a aplicação
+docker compose stop             # para tudo (mantém os dados)
+docker compose up -d            # sobe de novo, sem rebuild
+docker compose down             # remove os containers (mantém os dados)
+```
+
+> ⚠️ **Não use `docker compose down -v`**: o `-v` apaga o volume `dbdata`, ou seja, **todo o banco de dados**. Só use se quiser zerar tudo de propósito.
+
+---
+
+## 3. Rodar sem Docker (alternativa)
+
+Use apenas se não for possível instalar o Docker.
+
+**Requisitos:** PHP 8.2+ com as extensões `pdo_mysql`, `curl` e `mbstring`; MySQL 8 (ou MariaDB 10.6+); Apache (ou o XAMPP).
+
+1. Crie o banco e carregue o esquema:
+   ```bash
+   mysql -uroot -p -e "CREATE DATABASE phynix CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+   mysql -uroot -p phynix < backend/schema.sql
    ```
-   DB_HOST=localhost
-   DB_NAME=phynix
-   DB_USER=root
-   DB_PASS=
-   GROQ_API_KEY=gsk_sua_chave_aqui
-   GROQ_MODEL=llama-3.3-70b-versatile
-   ALLOWED_ORIGINS=
-   APP_ENV=development
-   ```
+2. Crie `backend/.env` com as variáveis da [seção 5](#5-variáveis-de-ambiente), usando `DB_HOST=127.0.0.1` e o usuário/senha do seu MySQL. O back-end lê esse arquivo apenas quando a variável **não** estiver definida no ambiente.
+3. Aponte o *DocumentRoot* do Apache (ou a pasta `htdocs` do XAMPP) para a pasta do projeto, com `AllowOverride All` habilitado, e abra o endereço no navegador.
+4. Ajuste `ALLOWED_ORIGINS` para o endereço que você usa (por exemplo `http://localhost`).
 
-   (senha vazia é o padrão do MySQL do XAMPP)
-
-5. Acesse **`http://localhost/phynix-tcc-main/frontend/index.html`**
-   no navegador.
-
-Front e back ficam na mesma pasta/domínio (`localhost`), então não é
-necessário preencher `ALLOWED_ORIGINS` — deixe vazio.
-
-### 3. Primeiro uso
-
-A tela inicial é de **login/cadastro**. Clique em "Criar conta",
-cadastre-se, e você já entra logado automaticamente (sessão via
-cookie PHP).
+O caminho com Docker é o testado e suportado; este serve como alternativa.
 
 ---
 
-## Deploy em produção (Railway)
+## 4. Publicar em um servidor
 
-O projeto está publicado no Railway com dois serviços no mesmo
-projeto: o app PHP (via Dockerfile) e um banco MySQL gerenciado.
+A mesma configuração do Docker serve para um servidor real (VPS, máquina da escola, etc.).
 
-### Por que Dockerfile em vez da detecção automática do Railway
+### 4.1 No servidor (Debian/Ubuntu)
 
-O projeto não tem `composer.json` e usa caminhos relativos
-(`../backend/api` no `js/api.js`), então front e back precisam ser
-servidos pelo **mesmo** Apache, na mesma raiz — a detecção automática
-de PHP do Railway (Nixpacks) não reproduz essa estrutura de pastas
-irmãs corretamente. O `Dockerfile` na raiz resolve isso copiando o
-projeto inteiro (mantendo a mesma estrutura do XAMPP) para dentro de
-uma imagem `php:8.2-apache`.
+```bash
+# instalar Docker (método oficial resumido)
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER        # sair e entrar na sessão depois
 
-### Passo a passo (resumo — se for redeployar do zero)
+git clone https://github.com/Adryan16isaque/phynix-tcc.git
+cd phynix-tcc
+cp .env.example .env                 # edite: senhas fortes e a URL pública
+docker compose up -d --build
+docker compose exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' < backend/schema.sql
+```
 
-1. **Suba o projeto pro GitHub**, com o `Dockerfile` na raiz do repo
-   (mesmo nível de `frontend/` e `backend/`). Não suba `backend/.env`.
-2. No Railway: **New Project → Deploy from GitHub repo**, selecione o
-   repositório. O Railway detecta o `Dockerfile` e builda com ele.
-3. **Adicione o serviço MySQL**: `+ New → Database → Add MySQL`.
-4. No serviço do **app** (não no do MySQL) → aba **Variables**,
-   adicione:
-   - `DB_HOST` = `${{MySQL.MYSQLHOST}}`
-   - `DB_NAME` = `${{MySQL.MYSQLDATABASE}}`
-   - `DB_USER` = `${{MySQL.MYSQLUSER}}`
-   - `DB_PASS` = `${{MySQL.MYSQLPASSWORD}}`
-   - `APP_ENV` = `production`
-   - `GROQ_API_KEY` = sua chave
-   - `GROQ_MODEL` = `llama-3.3-70b-versatile`
-   - `ALLOWED_ORIGINS` = vazio (front e back estão no mesmo domínio)
+No `.env` de produção:
 
-   Use o autocomplete `${{ }}` do próprio Railway em vez de digitar na
-   mão, pra não errar o nome da variável nem colar espaço em branco
-   sem querer.
-5. **Rode o `schema.sql` no banco do Railway.** Como o banco já se
-   chama `railway` (não `phynix`), remova as linhas
-   `CREATE DATABASE`/`USE phynix` do início do arquivo antes de rodar.
-   Conecte via um cliente (DBeaver, MySQL Workbench) usando as
-   credenciais públicas do MySQL (Settings → Networking → Public
-   Networking, ativado temporariamente) ou pela própria aba **Data**
-   do Railway.
-6. Gere o domínio público em Settings → Networking → Generate Domain.
-7. Acesse `https://SEU-APP.up.railway.app/` (o `index.php` na raiz
-   redireciona automaticamente pra `/frontend/`).
+```env
+APP_ENV=production
+ALLOWED_ORIGINS=https://seu-dominio-ou-url-publica
+```
 
-### Bugs específicos do Railway que já foram resolvidos no Dockerfile
+Com `APP_ENV=production` o site espera ser acessado por **HTTPS**. Em produção use uma senha forte em `DB_PASS`.
 
-- **`AH00534: More than one MPM loaded`** — bug conhecido do Railway
-  com imagens `php:*-apache`: o runtime reativa `mpm_event` depois do
-  build. O fix (já incluído no `Dockerfile`) roda `a2dismod`/`a2enmod`
-  na inicialização do container (`CMD`), não só no build.
-- **Porta**: o Railway injeta a porta real em `$PORT`; o `CMD` ajusta
-  o Apache pra escutar nela em vez da 80 fixa.
-- **403 Forbidden na raiz**: resolvido com o `index.php` na raiz do
-  repo, que redireciona pra `/frontend/`.
+### 4.2 Expor para a internet
 
-### Depois do deploy — checklist de segurança
+O container `app` escuta apenas em `127.0.0.1:8080`. Escolha uma das formas:
 
-- Desative o **Public Access** do MySQL (Settings → Networking) depois
-  de rodar migrações — o app conversa com o banco pela rede interna
-  do Railway (`mysql.railway.internal`), não precisa do público ligado.
-- **Não escale pra mais de 1 réplica** no serviço do app: o login usa
-  sessão de arquivo do PHP, que não é compartilhada entre réplicas.
-- Trial do Railway: 30 dias **ou** $5 de crédito (o que vier primeiro),
-  depois cai pro plano Free ($1/mês). Para manter o app no ar sem
-  interrupção, considere o plano Hobby ($5/mês).
+**Opção A. Tailscale Funnel (a que usamos no TCC).** Dá uma URL pública com HTTPS, sem abrir portas no roteador e sem IP fixo:
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
+sudo tailscale funnel --bg 8080
+tailscale funnel status              # mostra a URL https://<máquina>.<tailnet>.ts.net
+```
+
+Use essa URL em `ALLOWED_ORIGINS` e rode `docker compose up -d` de novo para aplicar. O Funnel precisa estar habilitado na sua conta Tailscale (o próprio comando mostra o link para habilitar).
+
+**Opção B. Domínio próprio + proxy reverso.** Em um VPS com IP público, aponte o DNS do domínio para o IP e coloque um proxy com HTTPS automático (por exemplo Caddy ou Nginx + Certbot) encaminhando para `127.0.0.1:8080`.
+
+**Opção C. Rede local.** Para acessar de outros computadores da mesma rede, troque em `docker-compose.yml` a linha `"127.0.0.1:8080:80"` por `"8080:80"` e coloque o endereço usado (por exemplo `http://192.168.0.10:8080`) em `ALLOWED_ORIGINS`.
+
+### 4.3 Dicas para servidor em notebook/PC próprio
+
+- Desative a suspensão: `sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target`
+- Prefira **cabo de rede** ao Wi-Fi e mantenha o equipamento na tomada.
+- Os serviços já usam `restart: unless-stopped`; habilite o Docker e o Tailscale no boot: `sudo systemctl enable docker tailscaled`.
 
 ---
 
-## Funcionalidades recentes
+## 5. Variáveis de ambiente
 
-- **Markdown nas respostas da IA**: o chat agora renderiza negrito,
-  listas, código etc. (via `marked.js` + `DOMPurify`, carregados por
-  CDN) em vez de mostrar os símbolos de Markdown literalmente.
-  Mensagens do usuário continuam como texto puro por segurança.
+O arquivo `.env` fica na **raiz** do projeto. O `docker-compose.yml` lê esse arquivo e repassa os valores ao container.
+
+| Variável | Obrigatória | Descrição |
+|---|---|---|
+| `DB_NAME` | sim | Nome do banco (ex.: `phynix`). |
+| `DB_PASS` | sim | Senha do MySQL (usuário `root` dentro da rede do Docker). |
+| `GROQ_API_KEY` | para o chat | Chave da API da Groq. |
+| `GROQ_API_KEYS` | não | Várias chaves separadas por vírgula, usadas em rodízio. |
+| `GROQ_MODEL` | sim | Modelo da Groq (ex.: `openai/gpt-oss-120b`). |
+| `ALLOWED_ORIGINS` | sim | Origem(ns) permitida(s) para as requisições (CORS), separadas por vírgula. Deve ser exatamente o endereço que aparece no navegador. |
+| `APP_ENV` | sim | `development` (acesso por `http`) ou `production` (HTTPS). |
+
+O banco de dados dentro do Docker é acessado pelo host `db` (definido no `docker-compose.yml`); não é preciso configurar `DB_HOST`.
+
+---
+
+## 6. Estrutura do projeto
+
+```
+phynix-tcc/
+├── frontend/            # páginas, estilos e scripts (módulos ES)
+├── backend/
+│   ├── api/             # endpoints PHP (auth, chat, matérias, etc.)
+│   ├── config/          # leitura de variáveis de ambiente
+│   ├── includes/        # bootstrap, conexão com o banco, helpers
+│   ├── schema.sql       # esquema do banco (9 tabelas)
+│   └── ...
+├── index.php            # ponto de entrada
+├── Dockerfile           # imagem php:8.2-apache + pdo_mysql
+├── docker-compose.yml   # serviços app + db
+├── .env.example         # modelo das variáveis de ambiente
+└── README.md
+```
+
+O `Dockerfile` ajusta a porta do Apache e o módulo MPM (`prefork`, exigido pelo PHP) a cada inicialização, de forma idempotente.
+
+---
+
+## 7. Banco de dados
+
+- **MySQL 8.4**, charset `utf8mb4`, engine InnoDB.
+- Esquema em `backend/schema.sql`: **9 tabelas** (usuários, matérias, sessões e mensagens do chat, entre outras).
+- Integridade relacional por chaves estrangeiras, inclusive compostas `(user_id, subject_id)`, para que um usuário nunca referencie matéria de outro.
+- `chat_messages` tem `ON DELETE CASCADE` a partir de `chat_sessions`: apagar uma conversa apaga suas mensagens.
+- Senhas são armazenadas com hash (nunca em texto puro).
+
+---
+
+## 8. Manutenção: atualizar, backup e restauração
+
+**Atualizar o código**
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+**Backup do banco**
+
+```bash
+docker compose exec -T db sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' > backup.sql
+```
+
+**Restaurar**
+
+```bash
+docker compose exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' < backup.sql
+```
+
+Arquivos `.sql` com dados reais contêm informações de usuários: **não os envie ao GitHub**.
+
+---
+
+## 9. Problemas comuns
+
+| Sintoma | Causa provável e solução |
+|---|---|
+| `port is already allocated` / porta 8080 em uso | Outro programa usa a 8080. Pare-o ou troque a porta em `docker-compose.yml` (`"127.0.0.1:8081:80"`, por exemplo). |
+| Página abre, mas login/cadastro falham | Confira `ALLOWED_ORIGINS` (deve ser idêntico ao endereço do navegador, com `http`/`https` e porta) e `APP_ENV`. Depois: `docker compose up -d`. |
+| Erro de tabela inexistente (`Table ... doesn't exist`) | O esquema não foi carregado. Rode o passo 4 da seção 2.2. |
+| Chat responde "Não consegui responder agora" | Verifique `GROQ_API_KEY`, `GROQ_MODEL` e a conexão. Veja `docker compose logs app`. |
+| `app` reiniciando em loop | `docker compose logs app`. Em geral é `.env` ausente ou variável faltando. |
+| `docker compose` não existe | Instale/atualize o Docker (Compose v2). Em versões antigas o comando era `docker-compose`. |
+| Alterei o `.env` e nada mudou | Rode `docker compose up -d` (recria o container com os novos valores). |
+| Quero zerar o banco | `docker compose down -v` e suba de novo (**apaga tudo**), depois repita o passo 4. |
+
+---
+
+## 9.1 Verificação rápida
+
+```bash
+curl -I http://localhost:8080          # deve responder HTTP 200
+docker compose ps                      # db healthy, app running
+```
+
+---
+
+## 10. Segurança e LGPD
+
+- A chave da Groq existe só no servidor; o navegador nunca a recebe. Para a IA vai apenas o texto da conversa (papel e conteúdo), sem nome ou e-mail do usuário.
+- Nunca versione `.env`, chaves ou dumps do banco.
+- O banco não é exposto fora da rede interna do Docker.
+- O tratamento de dados pessoais segue os princípios da **Lei nº 13.709/2018 (LGPD)**: finalidade, necessidade, segurança e transparência. Os detalhes estão descritos no texto do TCC.
+- Em produção: senhas fortes, HTTPS, atualizações regulares do sistema e backup periódico.
+
+---
+
+Projeto acadêmico. Dúvidas sobre a instalação: abra uma *issue* neste repositório.
